@@ -1,65 +1,135 @@
 <?php
+
 include_once $_SERVER['DOCUMENT_ROOT'] . '/utils/jwt.php';
+include_once $_SERVER['DOCUMENT_ROOT'] . '/utils/File_Manager.php';
 
 class User
 {
     private $conn;
     private static $table_name = 'users';
-    private static $site_name = '';
+    private $jwt;
+    private $file_manager;
 
     public function __construct($db_conn)
     {
         $this->conn = $db_conn;
-        self::$site_name = $_SERVER['DOCUMENT_ROOT'];
+        $this->jwt = new JWT_Util();
+        $this->file_manager = new File_Manager();
     }
 
-    public function GetUser(){
+    public function GetUser($auth, $id){
 
     }
 
-    public function AddUser($auth, $args)
-    {
+    public function GetUserById($id){
         try {
-//            $jwt = new JWT_Util();
-//            $payload = (array)$jwt->Decode_JWT($auth);
-//
-//            if ($payload['asn'] != self::$site_name)
-//                return new Firebase\JWT\SignatureInvalidException('Authorize key not valid!');
-//
-//            if($payload['act'] < time())
-//                return new Firebase\JWT\BeforeValidException('Authorize dat not valid!');
-//
-//            if($payload['aet'] > $jwt->GetExpireTime($payload['act']))
-//                return new Firebase\JWT\ExpiredException('Authorize code has bin expired!');
+            $query = sprintf("SELECT * FROM %s WHERE id = :id", self::$table_name);
 
-            if (empty($args['username']) && empty($args['password']) && empty($args['email'])) {
-                return new Http\Exception\BadQueryStringException('some data not sent.');
+            $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $stmt = $this->conn->prepare($query);
+
+            $stmt->bindParam(':id',$id);
+
+            if ($stmt->execute()) {
+                if ($stmt->rowCount()) {
+                    return $stmt->fetch(PDO::FETCH_ASSOC);
+                } else {
+                    return null;
+                }
+            } else {
+                return false;
             }
 
-            $username = $args['username'];
-            $password = md5($args['password']);
-            $full_name = empty($args['full_name']) ? '' : $args['full_name'];
-            $email = $args['email'];
+        } catch (PDOException $pdo_exception){
+            return 'PDO Exception : ' . $pdo_exception->getMessage();
+        }
+    }
 
-            $query = "INSERT INTO " . self::$table_name . " SET username = :username, password = :password, full_name = :full_name, email = :email";
+    public function GetUserByEmail($email){
+        try {
+            $query = sprintf("SELECT * FROM %s WHERE email=:email", self::$table_name);
+
+            $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $stmt = $this->conn->prepare($query);
+
+            $stmt->bindParam(':email',$email);
+
+            if ($stmt->execute()) {
+                if ($stmt->rowCount()) {
+                    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+                } else {
+                    return null;
+                }
+            } else {
+                return false;
+            }
+
+        } catch (PDOException $pdo_exception){
+            return 'PDO Exception : ' . $pdo_exception->getMessage();
+        }
+    }
+
+    public function GetUserByUsername($username){
+        try {
+            $query = sprintf("SELECT * FROM %s WHERE username=:username", self::$table_name);
 
             $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             $stmt = $this->conn->prepare($query);
 
             $stmt->bindParam(':username',$username);
-            $stmt->bindParam(':password',$password);
-            $stmt->bindParam(':full_name',$full_name);
-            $stmt->bindParam(':email',$email);
 
             if ($stmt->execute()) {
                 if ($stmt->rowCount()) {
-                    return true;
+                    return $stmt->fetchAll(PDO::FETCH_ASSOC);
                 } else {
-                    return false;
+                    return null;
                 }
             } else {
                 return false;
             }
+
+        } catch (PDOException $pdo_exception){
+            return 'PDO Exception : ' . $pdo_exception->getMessage();
+        }
+    }
+
+    public function AddUser($auth, $args)
+    {
+        try {
+//            if($this->jwt->Validate_Token($auth)) {
+                $username = $args['username'];
+                $password = md5($args['password']);
+                $full_name = empty($args['full_name']) ? '' : $args['full_name'];
+                $email = $args['email'];
+                $user_avatar = !empty($args['user_avatar']) ? $args['user_avatar'] : '';
+
+                $get_result = $this->GetUserByEmail($email);
+                if ($get_result != null)
+                    return 'user_already_exist';
+
+                $user_avatar = $this->file_manager->Upload_Image($user_avatar);
+
+                $query = sprintf("INSERT INTO %s SET username=:username, password=:password, full_name=:full_name, email=:email, user_avatar=:user_avatar", self::$table_name);
+
+                $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                $stmt = $this->conn->prepare($query);
+
+                $stmt->bindParam(':username', $username);
+                $stmt->bindParam(':password', $password);
+                $stmt->bindParam(':full_name', $full_name);
+                $stmt->bindParam(':email', $email);
+                $stmt->bindParam(':user_avatar', $user_avatar);
+
+                if ($stmt->execute()) {
+                    if ($stmt->rowCount()) {
+                        return 'user_added';
+                    } else {
+                        return 'failed_user_add';
+                    }
+                } else {
+                    return false;
+                }
+//            }
         } catch (PDOException $pdo_exception) {
             return 'PDO : ' . $pdo_exception->getMessage();
         } catch (Exception $exception) {

@@ -23,3 +23,15 @@ if(!defined('DB_DRIVER'))
 
 if(!defined('JWT_PRIVATE_KEY'))
     define('JWT_PRIVATE_KEY', '3j4klv4j5v234$%@#i34ohv4787(*&78786HEJKR4RUIEORERkjnvsdfjh!@$#$@');
+
+if(!defined('AVATAR_DIR'))
+    define('AVATAR_DIR', $_SERVER['DOCUMENT_ROOT'] . '/uploads/avatar/');
+
+if(!defined('AVATAR_URL'))
+    define('AVATAR_URL', '/uploads/avatar/');
+
+if(!defined('MAX_AVATAR_FILE_SIZE'))
+    define('MAX_AVATAR_FILE_SIZE', '2MB');
+
+if(!defined('VALID_AVATAR_MIME'))
+    define('VALID_AVATAR_MIME', ['image/jpg','image/png','image/jpeg']);

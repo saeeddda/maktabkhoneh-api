@@ -5,44 +5,53 @@ header("Access-Control-Allow-Methods: POST");
 
 include_once $_SERVER['DOCUMENT_ROOT'] . '/consts/configs.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/utils/database.php';
+include_once $_SERVER['DOCUMENT_ROOT'] . '/utils/sanitizer.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/controllers/User.php';
 
-$db = new Database();
+if($_SERVER['REQUEST_METHOD'] === 'POST'){
+    $db = new Database();
+    $user = new User($db->GetConnection());
 
-//echo $db->GetConnection();
-//exit;
+    $request = apache_request_headers();
 
-$user = new User($db->GetConnection());
+    if(empty($_POST['username']) && empty($_POST['password']) && empty($_POST['full_name']) && empty($_POST['email'])) {
+        echo json_encode(['data' => 'data_not_valid', 'msg' => 'Data not valid!', 'success' => false]);
+        return;
+    }
 
-//$json_data = json_decode(file_get_contents('php://input'));
+    $args =[
+        'username' => sanitize_strings($_POST['username']),
+        'password' => $_POST['password'],
+        'full_name' => $_POST['full_name'],
+        'user_avatar' => $_FILES['image'],
+        'email' => sanitize_email($_POST['email']),
+    ];
 
-if(empty($_POST['username']) && empty($_POST['password']) && empty($_POST['full_name']) && empty($_POST['email']))
-    echo json_encode([
-        'data'=>'Data not valid!',
-        'success'=>false
-    ]);
+    $auth = isset($request['Authorization']) && !empty($request['Authorization']) ? str_replace('Bearer ','', $request['Authorization']) : '';
 
-$args =[
-    'username' => $_POST['username'],
-    'password' => $_POST['password'],
-    'full_name' => $_POST['full_name'],
-    'email' => $_POST['email'],
-];
-
-$auth = isset($_POST['Authorization']) && !empty($_POST['Authorization']) ? str_replace('Bearer ','', $_POST['Authorization']) : '';
-
-$result = $user->AddUser($auth, $args);
-
-if($result) {
-    http_response_code(200);
-    echo json_encode([
-        'data' => 'User added',
-        'success' => true
-    ]);
-}else{
-    http_response_code(501);
-    echo json_encode([
-        'data' => $result,
-        'success' => false
-    ]);
+    $result = $user->AddUser($auth, $args);
+    if($result == 'user_added') {
+        http_response_code(200);
+        echo json_encode([
+            'data' => 'user_added',
+            'msg' => 'User added successfully',
+            'success' => true
+        ]);
+    }else if($result == 'user_already_exist'){
+        http_response_code(200);
+        echo json_encode([
+            'data' => 'user_exist',
+            'msg' => 'User already exist.',
+            'success' => false
+        ]);
+        return;
+    }else{
+        http_response_code(501);
+        echo json_encode([
+            'data' => 'failed',
+            'msg' => 'Failed to add user.',
+            'success' => false
+        ]);
+    }
+    return;
 }

@@ -17,11 +17,15 @@ class User
         $this->file_manager = new File_Manager();
     }
 
-    public function GetUser($auth, $id){
+    public function GetUserInfo($username, $email = ''){
 
     }
 
-    public function GetUserById($id){
+    public function GetUser($auth, $id = '', $username = '', $email = ''){
+
+    }
+
+    private function GetUserById($id){
         try {
             $query = sprintf("SELECT * FROM %s WHERE id = :id", self::$table_name);
 
@@ -45,7 +49,7 @@ class User
         }
     }
 
-    public function GetUserByEmail($email){
+    private function GetUserByEmail($email){
         try {
             $query = sprintf("SELECT * FROM %s WHERE email=:email", self::$table_name);
 
@@ -69,7 +73,7 @@ class User
         }
     }
 
-    public function GetUserByUsername($username){
+    private function GetUserByUsername($username){
         try {
             $query = sprintf("SELECT * FROM %s WHERE username=:username", self::$table_name);
 
@@ -77,6 +81,30 @@ class User
             $stmt = $this->conn->prepare($query);
 
             $stmt->bindParam(':username',$username);
+
+            if ($stmt->execute()) {
+                if ($stmt->rowCount()) {
+                    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+                } else {
+                    return null;
+                }
+            } else {
+                return false;
+            }
+
+        } catch (PDOException $pdo_exception){
+            return 'PDO Exception : ' . $pdo_exception->getMessage();
+        }
+    }
+
+    private function GetUserByPhone($phone){
+        try {
+            $query = sprintf("SELECT * FROM %s WHERE phone=:phone", self::$table_name);
+
+            $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $stmt = $this->conn->prepare($query);
+
+            $stmt->bindParam(':phone',$phone);
 
             if ($stmt->execute()) {
                 if ($stmt->rowCount()) {
@@ -107,7 +135,8 @@ class User
                 if ($get_result != null)
                     return 'user_already_exist';
 
-                $user_avatar = $this->file_manager->Upload_Image($user_avatar);
+                if(!empty($args['user_avatar']))
+                    $user_avatar = $this->file_manager->Upload_Image($user_avatar);
 
                 $query = sprintf("INSERT INTO %s SET username=:username, password=:password, full_name=:full_name, email=:email, user_avatar=:user_avatar", self::$table_name);
 

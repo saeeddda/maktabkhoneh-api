@@ -14,25 +14,13 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
     $request = apache_request_headers();
 
     if(empty($_POST['email']) || empty($_POST['id']) || empty($_POST['username'])) {
-        echo json_encode(['data' => 'data_not_valid', 'msg' => 'Parameter not sent', 'success' => false]);
+        echo json_encode(['data' => 'parameter_not_valid', 'msg' => 'Parameter required!', 'success' => false]);
         return;
     }
 
-    $get_user_result = '';
-
-    if (isset($_POST['id']) && !empty($_POST['id'])){
-        $get_user_result = $user->GetUserById($_POST['id']);
-    }
-
-    if(isset($_POST['username']) && !empty($_POST['username'])){
-        $get_user_result = $user->GetUserByUsername($_POST['username']);
-    }
-
-    if(isset($_POST['email']) && !empty($_POST['email'])){
-        $get_user_result = $user->GetUserByEmail($_POST['email']);
-    }
-
     $auth = isset($request['Authorization']) && !empty($request['Authorization']) ? str_replace('Bearer ','', $request['Authorization']) : '';
+
+    $get_user_result = $user->GetUser();
 
     if(count($get_user_result) > 0) {
         http_response_code(200);

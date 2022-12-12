@@ -14,7 +14,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
 
     $request = apache_request_headers();
 
-    if(empty($_POST['username']) && empty($_POST['password']) && empty($_POST['full_name']) && empty($_POST['email'])) {
+    if(empty($_POST['username']) && empty($_POST['password']) && empty($_POST['email'])) {
         echo json_encode(['data' => 'data_not_valid', 'msg' => 'Data not valid!', 'success' => false]);
         return;
     }
@@ -22,9 +22,9 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
     $args =[
         'username' => sanitize_strings($_POST['username']),
         'password' => $_POST['password'],
-        'full_name' => $_POST['full_name'],
-        'user_avatar' => $_FILES['image'],
         'email' => sanitize_email($_POST['email']),
+        'full_name' => isset($_POST['full_name']) && !empty($_POST['full_name']) ? $_POST['full_name'] : '',
+        'user_avatar' => isset($_FILES['image']) && !empty($_FILES['image']) ? $_FILES['image'] : '',
     ];
 
     $auth = isset($request['Authorization']) && !empty($request['Authorization']) ? str_replace('Bearer ','', $request['Authorization']) : '';

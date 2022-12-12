@@ -22,19 +22,38 @@ if($_SERVER['REQUEST_METHOD'] === 'GET') {
 
     $get_user_result = $user->GetUser($auth, $_GET['username']);
 
-    if($get_user_result != null) {
+    if($get_user_result == 'not_found'){
+        http_response_code(404);
+        echo json_encode([
+            'data' => 'not_found',
+            'msg' => 'User not found.',
+            'success' => false
+        ]);
+        return;
+    }else if(is_array($get_user_result)) {
         http_response_code(200);
 
         $user_data = array();
 
-        foreach ($get_user_result as $user) {
-            $user_data[] = [
-                'id' => $user['id'],
-                'username' => $user['username'],
-                'full_name' => $user['full_name'],
-                'email' => $user['email'],
-                'phone' => $user['phone'],
-                'user_avatar' => $user['user_avatar'],
+        if (is_array($get_user_result)) {
+            foreach ($get_user_result as $user) {
+                $user_data[] = [
+                    'id' => $user['id'],
+                    'username' => $user['username'],
+                    'full_name' => $user['full_name'],
+                    'email' => $user['email'],
+                    'phone' => $user['phone'],
+                    'user_avatar' => $user['user_avatar'],
+                ];
+            }
+        }else{
+            $user_data = [
+                'id' => $get_user_result['id'],
+                'username' => $get_user_result['username'],
+                'full_name' => $get_user_result['full_name'],
+                'email' => $get_user_result['email'],
+                'phone' => $get_user_result['phone'],
+                'user_avatar' => $get_user_result['user_avatar'],
             ];
         }
         echo json_encode([
@@ -42,13 +61,6 @@ if($_SERVER['REQUEST_METHOD'] === 'GET') {
             'msg' => 'Users data reached.',
             'success' => true
         ]);
-    }else{
-        http_response_code(501);
-        echo json_encode([
-            'data' => 'not_found',
-            'msg' => 'User not found.',
-            'success' => false
-        ]);
+        return;
     }
-    return;
 }

@@ -18,10 +18,6 @@ class User
         $this->file_manager = new File_Manager();
     }
 
-//    public function GetUserInfo($username, $email = ''){
-//
-//    }
-
     public function GetUser($auth, $username){
         try {
             //todo: auth token is important
@@ -230,7 +226,7 @@ class User
 
             if ($stmt->execute()) {
                 if ($stmt->rowCount()) {
-                    return $stmt->fetch(PDO::FETCH_ASSOC);
+                    return $this->GetUserById($userId);
                 } else {
                     return 'failed_user_add';
                 }

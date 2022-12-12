@@ -20,23 +20,33 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
     }
 
     $args =[
-        'username' => sanitize_strings($_POST['username']),
+        'username' => strtolower(sanitize_strings($_POST['username'])),
         'password' => $_POST['password'],
         'email' => sanitize_email($_POST['email']),
         'full_name' => isset($_POST['full_name']) && !empty($_POST['full_name']) ? $_POST['full_name'] : '',
+        'phone' => isset($_POST['phone']) && !empty($_POST['phone']) ? $_POST['phone'] : '',
         'user_avatar' => isset($_FILES['image']) && !empty($_FILES['image']) ? $_FILES['image'] : '',
     ];
 
     $auth = isset($request['Authorization']) && !empty($request['Authorization']) ? str_replace('Bearer ','', $request['Authorization']) : '';
 
     $result = $user->AddUser($auth, $args);
-    if($result == 'user_added') {
+
+    if($result) {
         http_response_code(200);
         echo json_encode([
-            'data' => 'user_added',
+            'data' => [
+                'id' => $result['id'],
+                'username' => $result['username'],
+                'full_name' => $result['full_name'],
+                'email' => $result['email'],
+                'user_avatar' => $result['user_avatar'],
+                'phone' => $result['phone'],
+            ],
             'msg' => 'User added successfully',
             'success' => true
         ]);
+        return;
     }else if($result == 'user_already_exist'){
         http_response_code(200);
         echo json_encode([
@@ -52,6 +62,6 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
             'msg' => 'Failed to add user.',
             'success' => false
         ]);
+        return;
     }
-    return;
 }

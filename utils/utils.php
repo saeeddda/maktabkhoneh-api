@@ -56,3 +56,30 @@ function convert_to_bytes(string $from) {
 
     return $number * (1024 ** $exponent);
 }
+
+function generate_token($digit = 6){
+    switch ( $digit ) {
+        case 4:
+            $code = rand( 1000, 9999 );
+            break;
+        case 6:
+            $code = rand( 100000, 999999 );
+            break;
+        case 7:
+            $code = rand( 1000000, 9999999 );
+            break;
+        case 8:
+            $code = rand( 10000000, 99999999 );
+            break;
+        case 9:
+            $code = rand( 100000000, 999999999 );
+            break;
+        case 10:
+            $code = rand( 1000000000, 9999999999 );
+            break;
+        default:
+            $code = rand( 10000, 99999 );
+            break;
+    }
+    return $code;
+}

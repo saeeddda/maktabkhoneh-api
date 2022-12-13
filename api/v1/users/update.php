@@ -1,23 +1,20 @@
 <?php
 header('Access-Control-Allow-Origin: *');
 header("Content-Type: application/json; charset=UTF-8");
-header("Access-Control-Allow-Methods: PUT");
+header("Access-Control-Allow-Methods: POST");
 
-include_once $_SERVER['DOCUMENT_ROOT'] . '/consts/configs.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/utils/database.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/utils/sanitizer.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/controllers/User.php';
 
-if($_SERVER['REQUEST_METHOD'] === 'PUT'){
-    $db = new Database();
-    $user = new User($db->GetConnection());
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     $request = apache_request_headers();
 
-    echo json_decode(file_get_contents('php://input'));
-    return;
+    $db = new Database();
+    $user = new User($db->GetConnection());
 
-    $args =[
+    $args = [
         'username' => isset($_POST['username']) && !empty($_POST['username']) ? strtolower(sanitize_strings($_POST['username'])) : '',
         'password' => isset($_POST['password']) && !empty($_POST['password']) ? $_POST['password'] : '',
         'email' => isset($_POST['email']) && !empty($_POST['email']) ? sanitize_email($_POST['email']) : '',
@@ -26,11 +23,19 @@ if($_SERVER['REQUEST_METHOD'] === 'PUT'){
         'user_avatar' => isset($_FILES['image']) && !empty($_FILES['image']) ? $_FILES['image'] : '',
     ];
 
-    $auth = isset($request['Authorization']) && !empty($request['Authorization']) ? str_replace('Bearer ','', $request['Authorization']) : '';
+    $auth = isset($request['Authorization']) && !empty($request['Authorization']) ? str_replace('Bearer ', '', $request['Authorization']) : '';
 
-    $result = $user->EditUser($auth, sanitize_strings($_GET['id']), $args);
+    $result = $user->EditUser($auth, sanitize_strings($_POST['user_id']), $args);
 
-    if($result) {
+    if ($result == 'not_found') {
+        http_response_code(404);
+        echo json_encode([
+            'data' => 'not_found',
+            'msg' => 'User not found.',
+            'success' => false
+        ]);
+        return;
+    } else if ($result) {
         http_response_code(200);
         echo json_encode([
             'data' => [
@@ -45,11 +50,11 @@ if($_SERVER['REQUEST_METHOD'] === 'PUT'){
             'success' => true
         ]);
         return;
-    }else{
+    } else {
         http_response_code(501);
         echo json_encode([
             'data' => 'failed',
-            'msg' => 'Failed to add user.',
+            'msg' => 'Failed to update user.',
             'success' => false
         ]);
         return;

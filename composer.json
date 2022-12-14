@@ -3,7 +3,6 @@
     "ext-pdo": "*",
     "firebase/php-jwt": "^6.3",
     "ext-json": "*",
-    "ext-http": "*",
-    "ext-fileinfo": "*"
+    "phpmailer/phpmailer": "^6.7"
   }
 }

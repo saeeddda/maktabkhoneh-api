@@ -8,6 +8,7 @@ class User
 {
     private $conn;
     private static $table_name = 'users';
+    private static $Follower_table_name = 'followers';
     private $jwt;
     private $file_manager;
 
@@ -35,6 +36,32 @@ class User
             return 'PDO : ' . $pdo_exception->getMessage();
         } catch (Exception $exception) {
             return 'Exception : ' . $exception->getMessage();
+        }
+    }
+
+    public function GetAllUser($auth){
+        try {
+            //todo: validate token
+//            if($this->jwt->Validate_Token($auth)) {
+                $query = sprintf("SELECT * FROM %s ORDER BY id", self::$table_name);
+
+                $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                $stmt = $this->conn->prepare($query);
+
+                if ($stmt->execute()) {
+                    if ($stmt->rowCount()) {
+                        return $stmt->fetch(PDO::FETCH_ASSOC);
+                    } else {
+                        return null;
+                    }
+                } else {
+                    return false;
+                }
+//            }else{
+//                return false;
+//            }
+        } catch (PDOException $pdo_exception){
+            return 'PDO Exception : ' . $pdo_exception->getMessage();
         }
     }
 
@@ -203,7 +230,7 @@ class User
             $user_avatar = isset($args['user_avatar']) && !empty($args['user_avatar']) ? $args['user_avatar'] : $user_old_data['user_avatar'];
             $phone = isset($args['phone']) && !empty($args['phone']) ? $args['phone'] : $user_old_data['phone'];
             $active_token = isset($args['active_token']) && !empty($args['active_token']) ? $args['active_token'] : $user_old_data['active_token'];
-            $is_active = isset($args['is_active']) && !empty($args['is_active']) ? $args['is_active'] : $user_old_data['is_active'];
+//            $is_active = isset($args['is_active']) && !empty($args['is_active']) ? $args['is_active'] : $user_old_data['is_active'];
 
             if(isset($args['user_avatar']) && !empty($args['user_avatar'])) {
                 $this->file_manager->Remove_Old_Image($user_old_data['user_avatar']);
@@ -241,29 +268,150 @@ class User
         }
     }
 
-    public function FollowUser($auth, $userId, $followId){
+    public function DeleteUser($auth, $userId){
+        try {
+            //todo : validation token is here
+//            if($this->jwt->Validate_Token($auth)){
+                $get_result = $this->GetUserById($userId);
 
+                if ($get_result != null && !empty($get_result)) {
+                    $query = sprintf("DELETE FROM %s WHERE id=:id", self::$table_name);
+
+                    $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                    $stmt = $this->conn->prepare($query);
+
+                    $stmt->bindParam(':id', $userId);
+
+                    if ($stmt->execute()) {
+                        return 'user_deleted';
+                    } else {
+                        return 'failed_user_delete';
+                    }
+                } else {
+                    return 'user_not_found';
+                }
+//            }else{
+//                return false;
+//            }
+        } catch (PDOException $pdo_exception) {
+            return 'PDO : ' . $pdo_exception->getMessage();
+        } catch (Exception $exception) {
+            return 'Exception : ' . $exception->getMessage();
+        }
     }
 
-    public function UnfollowUser($auth, $userId, $followId){
+    public function FollowUnfollowUser($auth, $userId, $followerId){
+        try {
+            //todo: auth token is important
+//            if($this->jwt->Validate_Token($auth)) {
 
+            if($userId == $followerId)
+                return 'user_same_as_follower';
+
+            $get_user_result = $this->GetUserById($userId);
+            if ($get_user_result == null)
+                return 'user_not_found';
+
+            $get_follower_result = $this->GetUserById($followerId);
+            if ($get_follower_result == null)
+                return 'follower_not_found';
+
+            $get_follower = $this->GetFollower($userId,$followerId);
+            if($get_follower != null){
+                $query = sprintf("DELETE FROM %s WHERE user_id=:user_id AND follower_id=:follower_id", self::$Follower_table_name);
+
+                $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                $stmt = $this->conn->prepare($query);
+
+                $stmt->bindParam(':user_id', $userId);
+                $stmt->bindParam(':follower_id', $followerId);
+
+                if ($stmt->execute()) {
+                    if ($stmt->rowCount()) {
+                        return 'unfollow_successful';
+                    } else {
+                        return 'failed_user_unfollow';
+                    }
+                } else {
+                    return false;
+                }
+            }else{
+                $query = sprintf("INSERT INTO %s SET user_id=:user_id, follower_id=:follower_id", self::$Follower_table_name);
+
+                $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                $stmt = $this->conn->prepare($query);
+
+                $stmt->bindParam(':user_id', $userId);
+                $stmt->bindParam(':follower_id', $followerId);
+
+                if ($stmt->execute()) {
+                    if ($stmt->rowCount()) {
+                        return 'follow_successful';
+                    } else {
+                        return 'failed_user_follow';
+                    }
+                } else {
+                    return false;
+                }
+            }
+//            }
+        } catch (PDOException $pdo_exception) {
+            return 'PDO : ' . $pdo_exception->getMessage();
+        } catch (Exception $exception) {
+            return 'Exception : ' . $exception->getMessage();
+        }
+    }
+
+    private function GetFollower($userId, $followerId){
+        try {
+            $query = sprintf("SELECT * FROM %s WHERE user_id=:user_id AND follower_id=:follower_id", self::$Follower_table_name);
+
+            $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $stmt = $this->conn->prepare($query);
+
+            $stmt->bindParam(':user_id',$userId);
+            $stmt->bindParam(':follower_id',$followerId);
+
+            if ($stmt->execute()) {
+                if ($stmt->rowCount()) {
+                    return $stmt->fetch(PDO::FETCH_ASSOC);
+                } else {
+                    return null;
+                }
+            } else {
+                return false;
+            }
+
+        } catch (PDOException $pdo_exception){
+            return 'PDO Exception : ' . $pdo_exception->getMessage();
+        }
     }
 
     public function VerifyUserToken($userId, $token){
         try {
             $get_result = $this->GetUserById($userId);
 
-            if ($get_result != null && !empty($get_result)) {
+            if ($get_result != null && !empty($get_result) && !$get_result['is_active']) {
                 if($get_result['active_token'] == $token){
 
-                    $args =[
+                    $query = "UPDATE " . self::$table_name . " SET active_token=0, is_active=1 WHERE id=" . $userId;
 
-                    ];
+                    $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                    $stmt = $this->conn->prepare($query);
 
-//                    $this->EditUser('', $userId, )
+                    if ($stmt->execute()) {
+                        if ($stmt->rowCount()) {
+                            return 'user_active_successful';
+                        } else {
+                            return 'failed_user_active';
+                        }
+                    }
+                    return false;
+                }else{
+                    return 'token_not_valid';
                 }
             } else {
-                return 'user_not_valid';
+                return 'user_not_found_or_active';
             }
         } catch (PDOException $pdo_exception) {
             return 'PDO : ' . $pdo_exception->getMessage();

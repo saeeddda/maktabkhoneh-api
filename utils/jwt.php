@@ -18,20 +18,20 @@ class JWT_Util{
         return $create_time + (86400 * intval($expire_day));
     }
 
-    public function Validate_Token($auth_token){
+    public function Validate_Token($auth_token, $userId){
         $payload = (array)$this->Decode_JWT($auth_token);
 
         if ($payload['asn'] != get_site_url())
-            return new Firebase\JWT\SignatureInvalidException('Authorize key not valid!');
+            return 'token_not_valid';
 
         if($payload['act'] < time())
-            return new Firebase\JWT\BeforeValidException('Authorize dat not valid!');
+            return 'token_time_not_valid';
 
         if($payload['aet'] > $this->GetExpireTime($payload['act']))
-            return new Firebase\JWT\ExpiredException('Authorize code has bin expired!');
+            return 'token_time_not_valid';
 
-        if (empty($args['username']) && empty($args['password']) && empty($args['email'])) {
-            return new Http\Exception\BadQueryStringException('some data not sent.');
+        if ($payload['uid'] != $userId) {
+            return 'user_not_valid';
         }
 
         return true;

@@ -5,6 +5,7 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/utils/jwt.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/utils/database.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/utils/utils.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/utils/File_Manager.php';
+include_once $_SERVER['DOCUMENT_ROOT'] . '/controllers/User.php';
 
 class Authentication
 {
@@ -42,14 +43,27 @@ class Authentication
 
             if ($stmt->execute()) {
                 if ($stmt->rowCount()) {
-                    $create_time = time();
-                    $expire_time = $this->jwt->GetExpireTime($create_time);
-                    $payload = [
-                        'asn' => get_site_url(),
-                        'act' => $create_time,
-                        'aet' => $expire_time,
-                    ];
-                    return $this->jwt->Encode_JWT($payload);
+
+                    $select_user = '';
+                    if(!empty($email)){
+                       $select_user = $this->user->GetUserByEmail($email);
+                    }else if(!empty($username)){
+                        $select_user = $this->user->GetUserByUsername($username)[0];
+                    }
+
+                    if($select_user['is_active']) {
+                        $create_time = time();
+                        $expire_time = $this->jwt->GetExpireTime($create_time);
+                        $payload = [
+                            'asn' => get_site_url(),
+                            'act' => $create_time,
+                            'aet' => $expire_time,
+                            'uid'=> $select_user['id']
+                        ];
+                        return $this->jwt->Encode_JWT($payload);
+                    }else{
+                        return 'user_not_active';
+                    }
                 } else {
                     return 'username_or_password_false';
                 }
@@ -77,11 +91,11 @@ class Authentication
 
             $get_user_result = '';
 
-            if(!empty($email))
+            if(!empty($email)) {
                 $get_user_result = $this->user->GetUserByEmail($email);
-
-            if(!empty($username))
+            }else if(!empty($username)){
                 $get_user_result = $this->user->GetUserByUsername($username);
+            }
 
             if ($get_user_result != null)
                 return 'user_already_exist';
@@ -108,7 +122,7 @@ class Authentication
                 if ($stmt->rowCount()) {
                     $user = $this->user->GetUserById($this->conn->lastInsertId());
                     send_mail($user['email'], 'فعالسازی حساب کاربری', 'حساب کاربری شما غیرفعال میباشد. برای فعالسازی لطفاً کد زیر را در اپلیکشین وارد کنید : ' . $user['active_token']);
-                    return $user;
+                    return true;
                 } else {
                     return 'failed_user_add';
                 }

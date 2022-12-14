@@ -17,7 +17,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
         'email' => isset($_POST['email']) && !empty($_POST['email']) ? strtolower(sanitize_strings($_POST['email'])) : '',
         'full_name' => isset($_POST['full_name']) && !empty($_POST['full_name']) ? $_POST['full_name'] : '',
         'phone' => isset($_POST['phone']) && !empty($_POST['phone']) ? $_POST['phone'] : '',
-        'user_avatar' => isset($_FILES['image']) && !empty($_FILES['image']) ? $_FILES['image'] : '',
+        'user_avatar' => isset($_FILES['user_avatar']) && !empty($_FILES['user_avatar']) ? $_FILES['user_avatar'] : '',
     ];
 
     $result = $authorize->Register($args);
@@ -45,7 +45,8 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
         return;
     }else if($result){
         echo json_encode([
-            'data' => $result,
+            'data' => 'register_ok',
+            'msg' => 'User register successful',
             'success' => true,
         ]);
         return;

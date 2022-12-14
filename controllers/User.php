@@ -20,15 +20,17 @@ class User
         $this->file_manager = new File_Manager();
     }
 
-    public function GetUser($auth, $username){
+    public function GetUser($auth, $username, $userId){
         try {
-            if($this->jwt->Validate_Token($auth)) {
+            if($this->jwt->Validate_Token($auth, $userId)) {
                 $get_result = $this->GetUserByUsername($username);
                 if ($get_result != null && count($get_result) > 0) {
                     return $get_result;
                 } else {
                     return 'not_found';
                 }
+            }else{
+                return false;
             }
         } catch (PDOException $pdo_exception) {
             return 'PDO : ' . $pdo_exception->getMessage();
@@ -37,9 +39,9 @@ class User
         }
     }
 
-    public function GetAllUser($auth){
+    public function GetAllUser($auth, $userId){
         try {
-            if($this->jwt->Validate_Token($auth)) {
+            if($this->jwt->Validate_Token($auth, $userId)) {
                 $query = sprintf("SELECT * FROM %s ORDER BY id", self::$table_name);
 
                 $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -159,7 +161,7 @@ class User
     public function AddUser($auth, $args)
     {
         try {
-            if($this->jwt->Validate_Token($auth)) {
+            if($this->jwt->Validate_Token($auth, $args['user_id'])) {
                 $username = $args['username'];
                 $password = md5($args['password']);
                 $full_name = empty($args['full_name']) ? '' : $args['full_name'];
@@ -167,8 +169,18 @@ class User
                 $user_avatar = !empty($args['user_avatar']) ? $args['user_avatar'] : '';
                 $phone = !empty($args['phone']) ? $args['phone'] : '';
 
-                $get_result = $this->GetUserByEmail($email);
-                if ($get_result != null)
+                if(empty($email) && empty($username))
+                    return 'username_or_email_required';
+
+                $get_user_result = '';
+
+                if(!empty($email)) {
+                    $get_user_result = $this->GetUserByEmail($email);
+                }else if(!empty($username)){
+                    $get_user_result = $this->GetUserByUsername($username);
+                }
+
+                if ($get_user_result != null)
                     return 'user_already_exist';
 
                 $active_token = generate_token();
@@ -212,9 +224,9 @@ class User
 
     public function EditUser($auth, $userId, $args = array()){
         try {
-            if($this->jwt->Validate_Token($auth)) {
+            if($this->jwt->Validate_Token($auth, $userId)) {
 
-                $user_old_data = $this->GetUserById($userId);
+                $user_old_data = $this->GetUserById($args['edit_id']);
                 if ($user_old_data == null)
                     return 'user_not_found';
 
@@ -225,7 +237,6 @@ class User
                 $user_avatar = isset($args['user_avatar']) && !empty($args['user_avatar']) ? $args['user_avatar'] : $user_old_data['user_avatar'];
                 $phone = isset($args['phone']) && !empty($args['phone']) ? $args['phone'] : $user_old_data['phone'];
                 $active_token = isset($args['active_token']) && !empty($args['active_token']) ? $args['active_token'] : $user_old_data['active_token'];
-//            $is_active = isset($args['is_active']) && !empty($args['is_active']) ? $args['is_active'] : $user_old_data['is_active'];
 
                 if (isset($args['user_avatar']) && !empty($args['user_avatar'])) {
                     $this->file_manager->Remove_Old_Image($user_old_data['user_avatar']);
@@ -237,7 +248,7 @@ class User
                 $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
                 $stmt = $this->conn->prepare($query);
 
-                $stmt->bindParam(':id', $userId);
+                $stmt->bindParam(':id', $args['edit_id']);
                 $stmt->bindParam(':username', $username);
                 $stmt->bindParam(':password', $password);
                 $stmt->bindParam(':full_name', $full_name);
@@ -265,9 +276,9 @@ class User
         }
     }
 
-    public function DeleteUser($auth, $userId){
+    public function DeleteUser($auth, $userId, $deleteId){
         try {
-            if($this->jwt->Validate_Token($auth)){
+            if($this->jwt->Validate_Token($auth, $userId)){
                 $get_result = $this->GetUserById($userId);
 
                 if ($get_result != null && !empty($get_result)) {
@@ -276,7 +287,7 @@ class User
                     $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
                     $stmt = $this->conn->prepare($query);
 
-                    $stmt->bindParam(':id', $userId);
+                    $stmt->bindParam(':id', $deleteId);
 
                     if ($stmt->execute()) {
                         return 'user_deleted';
@@ -298,7 +309,7 @@ class User
 
     public function FollowUnfollowUser($auth, $userId, $followerId){
         try {
-            if($this->jwt->Validate_Token($auth)) {
+            if($this->jwt->Validate_Token($auth, $userId)) {
 
                 if ($userId == $followerId)
                     return 'user_same_as_follower';
@@ -359,7 +370,7 @@ class User
         }
     }
 
-    private function GetFollower($userId, $followerId){
+    public function GetFollower($userId, $followerId){
         try {
             $query = sprintf("SELECT * FROM %s WHERE user_id=:user_id AND follower_id=:follower_id", self::$Follower_table_name);
 

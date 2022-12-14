@@ -38,6 +38,13 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
             'success' => false,
         ]);
         return;
+    }else if($result == 'user_not_active'){
+        echo json_encode([
+            'data' => $result,
+            'msg' => 'User not active. Please active before login.',
+            'success' => true,
+        ]);
+        return;
     }else if($result){
         echo json_encode([
             'auth_token' => $result,

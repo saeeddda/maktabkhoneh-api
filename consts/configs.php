@@ -22,7 +22,7 @@ if(!defined('DB_DRIVER'))
     define('DB_DRIVER', 'mysql');
 
 if(!defined('JWT_PRIVATE_KEY'))
-    define('JWT_PRIVATE_KEY', '3j4klv4j5v234$%@#i34ohv4787(*&78786HEJKR4RUIEORERkjnvsdfjh!@$#$@');
+    define('JWT_PRIVATE_KEY', 'bQeThWmZq4t7w!z%C*F-JaNcRfUjXn2r');
 
 if(!defined('AVATAR_DIR'))
     define('AVATAR_DIR', $_SERVER['DOCUMENT_ROOT'] . '/uploads/avatar/');
@@ -35,3 +35,21 @@ if(!defined('MAX_AVATAR_FILE_SIZE'))
 
 if(!defined('VALID_AVATAR_MIME'))
     define('VALID_AVATAR_MIME', ['image/jpg','image/png','image/jpeg']);
+
+if(!defined('MAIL_HOST'))
+    define('MAIL_HOST', 'sasansafari.com');
+
+if(!defined('MAIL_PORT'))
+    define('MAIL_PORT', '465');
+
+if(!defined('MAIL_USERNAME'))
+    define('MAIL_USERNAME', 'maktabkhone@sasansafari.com');
+
+if(!defined('MAIL_PASSWORD'))
+    define('MAIL_PASSWORD', 'Maktabkhone1401');
+
+if(!defined('MAIL_NAME'))
+    define('MAIL_NAME', 'تیم پشتیبانی');
+
+if(!defined('MAIL_FROM'))
+    define('MAIL_FROM', 'maktabkhone@sasansafari.com');

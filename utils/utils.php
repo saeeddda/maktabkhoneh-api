@@ -1,6 +1,6 @@
 <?php
 
-function get_site_url(){
+function GetAppUrl(){
     return sprintf(
         "%s://%s",
         isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off' ? 'https' : 'http',
@@ -8,7 +8,7 @@ function get_site_url(){
     );
 }
 
-function format_size_units($bytes)
+function ConvertByteToSizeName($bytes)
 {
     if ($bytes >= 1073741824)
     {
@@ -38,7 +38,7 @@ function format_size_units($bytes)
     return $bytes;
 }
 
-function convert_to_bytes(string $from) {
+function ConvertSizeNameToByte(string $from) {
     $units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
     $number = substr($from, 0, -2);
     $suffix = strtoupper(substr($from,-2));
@@ -56,7 +56,7 @@ function convert_to_bytes(string $from) {
     return $number * (1024 ** $exponent);
 }
 
-function generate_token($digit = 6){
+function GenerateActivateToken($digit = 6){
     switch ( $digit ) {
         case 4:
             $code = rand( 1000, 9999 );
@@ -81,4 +81,8 @@ function generate_token($digit = 6){
             break;
     }
     return $code;
+}
+
+function GetExpireTime($create_time, $expire_day = 7){
+    return $create_time + (86400 * intval($expire_day));
 }

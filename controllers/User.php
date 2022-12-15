@@ -183,7 +183,7 @@ class User
                 if ($get_user_result != null)
                     return 'user_already_exist';
 
-                $active_token = generate_token();
+                $active_token = GenerateActivateToken();
 
                 if(!empty($args['user_avatar']))
                     $user_avatar = $this->file_manager->UploadFile($user_avatar, AVATAR_UPLOAD_DIR, AVATAR_UPLOAD_URL);

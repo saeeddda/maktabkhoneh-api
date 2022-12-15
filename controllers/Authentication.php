@@ -53,9 +53,9 @@ class Authentication
 
                     if($select_user['is_active']) {
                         $create_time = time();
-                        $expire_time = $this->jwt->GetExpireTime($create_time);
+                        $expire_time = GetExpireTime($create_time);
                         $payload = [
-                            'asn' => get_site_url(),
+                            'asn' => GetAppUrl(),
                             'act' => $create_time,
                             'aet' => $expire_time,
                             'uid'=> $select_user['id']
@@ -100,7 +100,7 @@ class Authentication
             if ($get_user_result != null)
                 return 'user_already_exist';
 
-            $active_token = generate_token();
+            $active_token = GenerateActivateToken();
 
             if (!empty($args['user_avatar']))
                 $user_avatar = $this->file_manager->UploadFile($user_avatar, AVATAR_UPLOAD_DIR, AVATAR_UPLOAD_URL);

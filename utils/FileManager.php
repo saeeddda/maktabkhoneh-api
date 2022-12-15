@@ -7,7 +7,7 @@ class File_Manager
 {
     public function UploadFile($image_file, $upload_dir, $upload_url){
         if(in_array($image_file['type'], VALID_AVATAR_MIME)) {
-            if($image_file['size'] < convert_to_bytes(MAX_AVATAR_FILE_SIZE)) {
+            if($image_file['size'] < ConvertSizeNameToByte(MAX_AVATAR_FILE_SIZE)) {
                 $new_name = date("YmdHis") . '.' . explode('.', $image_file['name'])[1];
                 $new_destination = $upload_dir . $new_name;
                 move_uploaded_file($image_file['tmp_name'], $new_destination);

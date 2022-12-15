@@ -2,6 +2,7 @@
 
 include_once $_SERVER['DOCUMENT_ROOT'] . '/vendor/autoload.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/consts/configs.php';
+include_once $_SERVER['DOCUMENT_ROOT'] . '/utils/utils.php';
 
 class JWT_Util{
     public function Encode_JWT($payload){
@@ -14,20 +15,16 @@ class JWT_Util{
         return Firebase\JWT\JWT::decode($jwt_encode,new Firebase\JWT\Key($key,'HS256'));
     }
 
-    public function GetExpireTime($create_time, $expire_day = 7){
-        return $create_time + (86400 * intval($expire_day));
-    }
-
     public function Validate_Token($auth_token, $userId){
         $payload = (array)$this->Decode_JWT($auth_token);
 
-        if ($payload['asn'] != get_site_url())
+        if ($payload['asn'] != GetAppUrl())
             return 'token_not_valid';
 
         if($payload['act'] < time())
             return 'token_time_not_valid';
 
-        if($payload['aet'] > $this->GetExpireTime($payload['act']))
+        if($payload['aet'] > GetExpireTime($payload['act']))
             return 'token_time_not_valid';
 
         if ($payload['uid'] != $userId) {

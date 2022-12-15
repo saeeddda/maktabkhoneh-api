@@ -56,7 +56,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
         ]);
         return;
     }else{
-        http_response_code(501);
+        http_response_code(400);
         echo json_encode([
             'data' => 'failed',
             'msg' => 'Failed to add user.',

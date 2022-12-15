@@ -23,6 +23,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
     $result = $authorize->Register($args);
 
     if($result == 'user_already_exist'){
+        http_response_code(201);
         echo json_encode([
             'data' => $result,
             'msg' => 'User already exist',
@@ -30,6 +31,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
         ]);
         return;
     }else if($result == 'failed_user_add'){
+        http_response_code(400);
         echo json_encode([
             'data' => $result,
             'msg' => 'Failed to add user',
@@ -37,13 +39,15 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
         ]);
         return;
     }else if($result == 'username_or_email_required'){
+        http_response_code(400);
         echo json_encode([
             'data' => $result,
             'msg' => 'Username or email required',
             'success' => false,
         ]);
         return;
-    }else if($result){
+    }else if($result == true){
+        http_response_code(200);
         echo json_encode([
             'data' => 'register_ok',
             'msg' => 'User register successful',

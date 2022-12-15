@@ -18,11 +18,12 @@ class File_Manager
         return false;
     }
 
-    public function RemoveOldFile($image_name, $destination){
-        if(file_exists($image_name)) {
-            $file_name = explode('/', $image_name);
-            $new_destination = $destination . end($file_name);
-            unlink($new_destination);
+    public function RemoveOldFile($image_name, $destination): bool{
+        $file_name = explode('/', $image_name);
+        $new_destination = $destination . end($file_name);
+        if(file_exists($new_destination)) {
+            return unlink($new_destination);
         }
+        return false;
     }
 }

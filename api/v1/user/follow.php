@@ -16,6 +16,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 
     $result = $user->FollowUnfollowUser($auth, $_POST['user_id'], $_POST['follower_id']);
     if($result == 'follow_successful'){
+        http_response_code(200);
         echo json_encode([
             'data' => $result,
             'msg' => 'User follow successful',
@@ -23,6 +24,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
         ]);
         return;
     }else if($result == 'failed_user_follow'){
+        http_response_code(400);
         echo json_encode([
             'data' => $result,
             'msg' => 'Failed user follow',
@@ -30,6 +32,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
         ]);
         return;
     }else if($result == 'unfollow_successful'){
+        http_response_code(200);
         echo json_encode([
             'data' => $result,
             'msg' => 'User unfollow successful',
@@ -37,6 +40,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
         ]);
         return;
     }else if($result == 'failed_user_unfollow'){
+        http_response_code(400);
         echo json_encode([
             'data' => $result,
             'msg' => 'Failed user unfollow',
@@ -44,6 +48,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
         ]);
         return;
     }else if($result == 'user_not_found'){
+        http_response_code(404);
         echo json_encode([
             'data' => $result,
             'msg' => 'User not found',
@@ -51,6 +56,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
         ]);
         return;
     }else if($result == 'follower_not_found'){
+        http_response_code(404);
         echo json_encode([
             'data' => $result,
             'msg' => 'Follower not found',
@@ -58,6 +64,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
         ]);
         return;
     }else if($result == 'user_same_as_follower'){
+        http_response_code(400);
         echo json_encode([
             'data' => $result,
             'msg' => 'User cant follow self',
@@ -65,6 +72,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
         ]);
         return;
     }else {
+        http_response_code(400);
         echo json_encode([
             'data' => $result,
             'msg' => 'Failed',

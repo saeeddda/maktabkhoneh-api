@@ -20,6 +20,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
     $result = $user->VerifyUserToken($userId,$token);
 
     if($result == 'user_active_successful'){
+        http_response_code(200);
         echo json_encode([
             'data' => $result,
             'ms' => 'User active successfully',
@@ -27,6 +28,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
         ]);
         return;
     }else if($result == 'token_not_valid'){
+        http_response_code(401);
         echo json_encode([
             'data' => $result,
             'ms' => 'User token not valid!',
@@ -34,6 +36,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
         ]);
         return;
     }else if($result == 'failed_user_active'){
+        http_response_code(400);
         echo json_encode([
             'data' => $result,
             'ms' => 'User validation failed',
@@ -41,9 +44,10 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
         ]);
         return;
     }else{
+        http_response_code(404);
         echo json_encode([
             'data' => $result,
-            'ms' => 'User not found or active',
+            'ms' => 'User not found or not active',
             'success' => false,
         ]);
         return;

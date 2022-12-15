@@ -13,14 +13,14 @@ if($_SERVER['REQUEST_METHOD'] === 'GET') {
 
     $request = apache_request_headers();
 
-    if(empty($_GET['username'])) {
+    if(empty($_GET['username']) || empty($_GET['user_id'])) {
         echo json_encode(['data' => 'parameter_not_valid', 'msg' => 'Parameter required!', 'success' => false]);
         return;
     }
 
     $auth = isset($request['Authorization']) && !empty($request['Authorization']) ? str_replace('Bearer ','', $request['Authorization']) : '';
 
-    $get_user_result = $user->GetUser($auth, $_GET['username']);
+    $get_user_result = $user->GetUser($auth, $_GET['username'],$_GET['user_id']);
 
     if($get_user_result == 'not_found'){
         http_response_code(404);

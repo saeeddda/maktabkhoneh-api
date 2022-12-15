@@ -18,6 +18,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
     $result = $authorize->Login($username,$email, $password);
 
     if($result == 'username_or_password_false'){
+        http_response_code(400);
         echo json_encode([
             'data' => $result,
             'msg' => 'Username or password not valid',
@@ -25,6 +26,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
         ]);
         return;
     }else if($result == 'failed_to_login'){
+        http_response_code(400);
         echo json_encode([
             'data' => $result,
             'msg' => 'Failed to user login',
@@ -32,6 +34,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
         ]);
         return;
     }else if($result == 'username_or_email_required'){
+        http_response_code(400);
         echo json_encode([
             'data' => $result,
             'msg' => 'Username or email required',
@@ -39,6 +42,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
         ]);
         return;
     }else if($result == 'user_not_active'){
+        http_response_code(200);
         echo json_encode([
             'data' => $result,
             'msg' => 'User not active. Please active before login.',
@@ -46,6 +50,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
         ]);
         return;
     }else if($result){
+        http_response_code(200);
         echo json_encode([
             'auth_token' => $result,
             'success' => true,

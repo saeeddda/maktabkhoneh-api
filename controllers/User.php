@@ -22,6 +22,9 @@ class User
 
     public function GetUser($auth, $username, $userId){
         try {
+            if(empty($auth))
+                return 'token_not_valid';
+
             if($this->jwt->Validate_Token($auth, $userId)) {
                 $get_result = $this->GetUserByUsername($username);
                 if ($get_result != null && count($get_result) > 0) {
@@ -161,6 +164,9 @@ class User
     public function AddUser($auth, $args)
     {
         try {
+            if(empty($auth))
+                return 'token_not_valid';
+
             if($this->jwt->Validate_Token($auth, $args['user_id'])) {
                 $username = $args['username'];
                 $password = md5($args['password']);
@@ -224,6 +230,9 @@ class User
 
     public function EditUser($auth, $userId, $args = array()){
         try {
+            if(empty($auth))
+                return 'token_not_valid';
+
             if($this->jwt->Validate_Token($auth, $userId)) {
 
                 $user_old_data = $this->GetUserById($args['edit_id']);
@@ -278,10 +287,16 @@ class User
 
     public function DeleteUser($auth, $userId, $deleteId){
         try {
+            if(empty($auth))
+                return 'token_not_valid';
+
             if($this->jwt->Validate_Token($auth, $userId)){
                 $get_result = $this->GetUserById($userId);
 
                 if ($get_result != null && !empty($get_result)) {
+
+                    $this->file_manager->RemoveOldFile($get_result['user_avatar'],AVATAR_UPLOAD_DIR);
+
                     $query = sprintf("DELETE FROM %s WHERE id=:id", self::$table_name);
 
                     $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -309,6 +324,9 @@ class User
 
     public function FollowUnfollowUser($auth, $userId, $followerId){
         try {
+            if(empty($auth))
+                return 'token_not_valid';
+
             if($this->jwt->Validate_Token($auth, $userId)) {
 
                 if ($userId == $followerId)

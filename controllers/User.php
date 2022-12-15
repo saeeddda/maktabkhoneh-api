@@ -1,7 +1,7 @@
 <?php
 
 include_once $_SERVER['DOCUMENT_ROOT'] . '/utils/jwt.php';
-include_once $_SERVER['DOCUMENT_ROOT'] . '/utils/File_Manager.php';
+include_once $_SERVER['DOCUMENT_ROOT'] . '/utils/FileManager.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/utils/utils.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/utils/mail.php';
 
@@ -186,7 +186,7 @@ class User
                 $active_token = generate_token();
 
                 if(!empty($args['user_avatar']))
-                    $user_avatar = $this->file_manager->Upload_Image($user_avatar);
+                    $user_avatar = $this->file_manager->UploadFile($user_avatar, AVATAR_UPLOAD_DIR, AVATAR_UPLOAD_URL);
 
                 $query = sprintf("INSERT INTO %s (username,password,full_name,email,user_avatar,phone,active_token,is_active) VALUES (:username,:password,:full_name,:email,:user_avatar,:phone,:active_token,0)", self::$table_name);
 
@@ -239,8 +239,8 @@ class User
                 $active_token = isset($args['active_token']) && !empty($args['active_token']) ? $args['active_token'] : $user_old_data['active_token'];
 
                 if (isset($args['user_avatar']) && !empty($args['user_avatar'])) {
-                    $this->file_manager->Remove_Old_Image($user_old_data['user_avatar']);
-                    $user_avatar = $this->file_manager->Upload_Image($user_avatar);
+                    $this->file_manager->RemoveOldFile($user_old_data['user_avatar'], AVATAR_UPLOAD_DIR);
+                    $user_avatar = $this->file_manager->UploadFile($user_avatar, AVATAR_UPLOAD_DIR, AVATAR_UPLOAD_URL);
                 }
 
                 $query = sprintf("UPDATE %s SET username=:username, password=:password, full_name=:full_name, email=:email, user_avatar=:user_avatar, phone=:phone, active_token=:active_token WHERE id=:id", self::$table_name);

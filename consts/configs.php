@@ -24,14 +24,26 @@ if(!defined('DB_DRIVER'))
 if(!defined('JWT_PRIVATE_KEY'))
     define('JWT_PRIVATE_KEY', 'bQeThWmZq4t7w!z%C*F-JaNcRfUjXn2r');
 
-if(!defined('AVATAR_DIR'))
-    define('AVATAR_DIR', $_SERVER['DOCUMENT_ROOT'] . '/uploads/avatar/');
+if(!defined('AVATAR_UPLOAD_DIR'))
+    define('AVATAR_UPLOAD_DIR', $_SERVER['DOCUMENT_ROOT'] . '/uploads/avatar/');
 
-if(!defined('AVATAR_URL'))
-    define('AVATAR_URL', '/uploads/avatar/');
+if(!defined('AVATAR_UPLOAD_URL'))
+    define('AVATAR_UPLOAD_URL', '/uploads/avatar/');
+
+if(!defined('POST_UPLOAD_DIR'))
+    define('POST_UPLOAD_DIR', $_SERVER['DOCUMENT_ROOT'] . '/uploads/posts/');
+
+if(!defined('POST_UPLOAD_URL'))
+    define('POST_UPLOAD_URL', '/uploads/posts/');
+
+if(!defined('STORY_UPLOAD_DIR'))
+    define('STORY_UPLOAD_DIR', $_SERVER['DOCUMENT_ROOT'] . '/uploads/stories/');
+
+if(!defined('STORY_UPLOAD_URL'))
+    define('STORY_UPLOAD_URL', '/uploads/stories/');
 
 if(!defined('MAX_AVATAR_FILE_SIZE'))
-    define('MAX_AVATAR_FILE_SIZE', '2MB');
+    define('MAX_AVATAR_FILE_SIZE', '4MB');
 
 if(!defined('VALID_AVATAR_MIME'))
     define('VALID_AVATAR_MIME', ['image/jpg','image/png','image/jpeg']);

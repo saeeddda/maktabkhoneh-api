@@ -4,7 +4,7 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/consts/configs.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/utils/jwt.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/utils/database.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/utils/utils.php';
-include_once $_SERVER['DOCUMENT_ROOT'] . '/utils/File_Manager.php';
+include_once $_SERVER['DOCUMENT_ROOT'] . '/utils/FileManager.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/controllers/User.php';
 
 class Authentication
@@ -103,7 +103,7 @@ class Authentication
             $active_token = generate_token();
 
             if (!empty($args['user_avatar']))
-                $user_avatar = $this->file_manager->Upload_Image($user_avatar);
+                $user_avatar = $this->file_manager->UploadFile($user_avatar, AVATAR_UPLOAD_DIR, AVATAR_UPLOAD_URL);
 
             $query = sprintf("INSERT INTO %s (username,password,full_name,email,user_avatar,phone,active_token,is_active) VALUES (:username,:password,:full_name,:email,:user_avatar,:phone,:active_token,0)", self::$table_name);
 

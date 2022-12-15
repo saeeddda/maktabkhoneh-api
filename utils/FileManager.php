@@ -21,8 +21,8 @@ class File_Manager
     public function RemoveOldFile($image_name, $destination){
         if(file_exists($image_name)) {
             $file_name = explode('/', $image_name);
-            $destination = $destination . end($file_name);
-            unlink($destination);
+            $new_destination = $destination . end($file_name);
+            unlink($new_destination);
         }
     }
 }

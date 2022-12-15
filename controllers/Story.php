@@ -5,7 +5,6 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/utils/database.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/utils/FileManager.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/utils/utils.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/utils/jwt.php';
-include_once $_SERVER['DOCUMENT_ROOT'] . '/utils/sanitizer.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/controllers/User.php';
 
 class Story
@@ -73,9 +72,57 @@ class Story
         }
     }
 
-    public function EditStory($auth, $userId, $args = array())
+    public function EditStory($auth, $userId, $storyId, $storyFile)
     {
+        try {
+            if (empty($auth))
+                return 'token_not_valid';
 
+            if ($this->jwt->Validate_Token($auth, $userId)) {
+                if ($storyFile['error'] > 0 || empty($storyId))
+                    return 'file_user_required';
+
+                if($this->user->GetUserById($userId))
+                    return 'user_not_found';
+
+                $get_story = $this->GetStoryById($storyId);
+                if ($get_story == null)
+                    return 'story_not_found';
+
+                $file_url = $get_story['file_url'];
+                if (!empty($file_url) && !empty($storyFile))
+                    if ($this->fileManager->RemoveOldFile($file_url, STORY_UPLOAD_DIR))
+                        $file_url = $this->fileManager->UploadFile($storyFile, STORY_UPLOAD_DIR, STORY_UPLOAD_URL);
+
+                $create_at = time();
+                $end_at = GetExpireTime($create_at, 1);
+
+                $query = sprintf('UPDATE %s SET file_url=:file_url, create_at=:create_at, end_at=:end_at', self::$table_name);
+
+                $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                $stmt = $this->conn->prepare($query);
+
+                $stmt->bindParam(':file_url', $file_url);
+                $stmt->bindParam(':create_at', $create_at);
+                $stmt->bindParam(':end_at', $end_at);
+
+                if ($stmt->execute()) {
+                    if ($stmt->rowCount()) {
+                        return $this->GetStoryById($this->conn->lastInsertId());
+                    } else {
+                        return 'failed_story_edit';
+                    }
+                } else {
+                    return false;
+                }
+            } else {
+                return 'token_not_valid';
+            }
+        } catch (PDOException $pdo_exception) {
+            return 'PDO Exception : ' . $pdo_exception->getMessage();
+        } catch (Exception $exception) {
+            return 'Exception : ' . $exception->getMessage();
+        }
     }
 
     public function DeleteStory($auth, $userId, $storyId)
@@ -116,14 +163,62 @@ class Story
         }
     }
 
-    public function GetStories($auth)
+    public function GetStories($auth, $userId, $random = false)
     {
+        try {
+            if (empty($auth))
+                return 'token_not_valid';
 
+            if ($this->jwt->Validate_Token($auth, $userId)) {
+                if ($random)
+                    $query = sprintf("SELECT * FROM %s ORDER BY RAND()", self::$table_name);
+                else
+                    $query = sprintf("SELECT * FROM %s", self::$table_name);
+
+                $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                $stmt = $this->conn->prepare($query);
+
+                if ($stmt->execute()) {
+                    if ($stmt->rowCount()) {
+                        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+                    } else {
+                        return 'no_story';
+                    }
+                } else {
+                    return 'failed_get_stories';
+                }
+            } else {
+                return 'token_not_valid';
+            }
+        } catch (PDOException $pdo_exception) {
+            return 'PDO : ' . $pdo_exception->getMessage();
+        } catch (Exception $exception) {
+            return 'Exception : ' . $exception->getMessage();
+        }
     }
 
-    public function GetStory($auth, $storyId)
+    public function GetStory($auth, $userId, $storyId)
     {
+        try {
+            if (empty($auth))
+                return 'token_not_valid';
 
+            if ($this->jwt->Validate_Token($auth, $userId)) {
+                $get_result = $this->GetStoryById($storyId);
+
+                if ($get_result != null) {
+                    return $get_result;
+                } else {
+                    return 'story_not_found';
+                }
+            } else {
+                return 'token_not_valid';
+            }
+        } catch (PDOException $pdo_exception) {
+            return 'PDO : ' . $pdo_exception->getMessage();
+        } catch (Exception $exception) {
+            return 'Exception : ' . $exception->getMessage();
+        }
     }
 
     private function GetStoryById($storyId)

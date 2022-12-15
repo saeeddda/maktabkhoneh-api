@@ -5,7 +5,6 @@ header("Access-Control-Allow-Methods: POST");
 
 include_once $_SERVER['DOCUMENT_ROOT'] . '/consts/configs.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/utils/database.php';
-include_once $_SERVER['DOCUMENT_ROOT'] . '/utils/sanitizer.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/controllers/Story.php';
 
 if($_SERVER['REQUEST_METHOD'] === 'POST'){
@@ -57,7 +56,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
             'success' => false
         ]);
         return;
-    }else if($result == true){
+    }else if($result){
         http_response_code(200);
         echo json_encode([
             'data' => $result,

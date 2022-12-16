@@ -207,7 +207,9 @@ class Post
                 $get_result = $this->GetPostById($postId);
 
                 if ($get_result != null) {
-                    return $get_result;
+                    $increasePostView = $this->IncreasePostView($postId);
+                    if( $increasePostView == true)
+                        return $this->GetPostById($postId);
                 } else {
                     return 'post_not_found';
                 }
@@ -301,14 +303,12 @@ class Post
                 if(empty($postId))
                     return 'post_id_require';
 
-                $get_result = $this->GetPostById($postId);
+                $get_post = $this->GetPostById($postId);
 
-                if ($get_result != null) {
+                if ($get_post != null) {
 
                     $get_like = $this->GetLikeByPostIdAndUserId($postId, $userId);
                     if($get_like == null) {
-
-
                         $like_query = sprintf("INSERT INTO %s (post_id, user_id) VALUES (:post_id, :user_id)", self::$likes_table_name);
                         $stmt = $this->conn->prepare($like_query);
 
@@ -317,13 +317,9 @@ class Post
 
                         if ($stmt->execute()) {
                             if ($stmt->rowCount()) {
-                                $get_like = $this->GetLikeById($this->conn->lastInsertId());
-                                $query = sprintf("UPDATE %s SET likes=:likes WHERE id=:id", self::$table_name);
+                                $query = "UPDATE " . self::$table_name . " SET likes='" . (intval($get_post['likes']) + 1) . "' WHERE id='" . $postId . "'";
 
                                 $stmt = $this->conn->prepare($query);
-
-                                $stmt->bindParam(':id', $postId);
-                                $stmt->bindParam(':likes', strval(intval($get_like['likes']) + 1));
 
                                 if ($stmt->execute()) {
                                     if ($stmt->rowCount()) {
@@ -333,9 +329,7 @@ class Post
                             }
                         }
                     }else{
-                        $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-                        $like_query = sprintf("INSERT INTO %s (post_id, user_id) VALUES (:post_id, :user_id)", self::$likes_table_name);
+                        $like_query = sprintf("DELETE FROM %s WHERE post_id=:post_id AND user_id=:user_id", self::$likes_table_name);
                         $stmt = $this->conn->prepare($like_query);
 
                         $stmt->bindParam(':post_id', $postId);
@@ -343,17 +337,14 @@ class Post
 
                         if ($stmt->execute()) {
                             if ($stmt->rowCount()) {
-                                $get_like = $this->GetLikeById($this->conn->lastInsertId());
-                                $query = sprintf("UPDATE %s SET likes=:likes WHERE id=:id", self::$table_name);
+                                $like =  intval($get_post['likes']) - 1;
+                                $query = "UPDATE " . self::$table_name . " SET likes='" . ($like < 0 ? 0 : $like) . "' WHERE id='" . $postId . "'";
 
                                 $stmt = $this->conn->prepare($query);
 
-                                $stmt->bindParam(':id', $postId);
-                                $stmt->bindParam(':likes', strval(intval($get_like['likes']) + 1));
-
                                 if ($stmt->execute()) {
                                     if ($stmt->rowCount()) {
-                                        return 'post_liked';
+                                        return 'post_unliked';
                                     }
                                 }
                             }
@@ -373,7 +364,32 @@ class Post
         }
     }
 
-    public function IncresePostView($auth, $userId, $postId){
+    private function IncreasePostView($postId){
+        try {
 
+            if (empty($postId))
+                return null;
+
+            $get_post = $this->GetPostById($postId);
+
+            if ($get_post != null) {
+                $query = sprintf("UPDATE %s SET views='%s' WHERE id='%s'", self::$table_name,(intval($get_post['views']) + 1), $postId);
+
+                $stmt = $this->conn->prepare($query);
+
+                if ($stmt->execute()) {
+                    if ($stmt->rowCount()) {
+                        return true;
+                    }
+                }
+                return false;
+            } else {
+                return null;
+            }
+        } catch (PDOException $pdo_exception) {
+            return 'PDO : ' . $pdo_exception->getMessage();
+        } catch (Exception $exception) {
+            return 'Exception : ' . $exception->getMessage();
+        }
     }
 }

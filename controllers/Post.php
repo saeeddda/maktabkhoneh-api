@@ -13,6 +13,7 @@ class Post
     private $conn;
     private static $table_name = 'posts';
     private static $likes_table_name = 'likes';
+    private static $file_table_name = 'files';
     private $jwt;
     private $fileManager;
     private $user;
@@ -26,14 +27,12 @@ class Post
         $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     }
 
-    public function AddPost($auth, $userId, $postFile, $postContent){
+    public function AddPost($auth, $userId, $postContent){
         try {
             if (empty($auth))
                 return 'token_not_valid';
 
             if ($this->jwt->Validate_Token($auth, $userId)) {
-                if ($postFile['error'] > 0 || empty($userId))
-                    return 'file_user_required';
 
                 if ($this->user->GetUserById($userId) == null)
                     return 'user_not_found';
@@ -41,16 +40,10 @@ class Post
                 $content = isset($postContent) && !empty($postContent) ? $postContent : '';
                 $create_at = time();
 
-                $file_url = '';
-                if (!empty($postFile))
-                    $file_url = $this->fileManager->UploadFile($postFile, POST_UPLOAD_DIR, POST_UPLOAD_URL);
+                $query = sprintf('INSERT INTO %s (content, likes, views, user_id, create_at) VALUES (:content,0,0,:user_id,:create_at)', self::$table_name);
 
-                $query = sprintf('INSERT INTO %s (file_url, content, likes, views, user_id, create_at) VALUES (:file_url,:content,0,0,:user_id,:create_at)', self::$table_name);
-
-                $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
                 $stmt = $this->conn->prepare($query);
 
-                $stmt->bindParam(':file_url', $file_url);
                 $stmt->bindParam(':content', $content);
                 $stmt->bindParam(':user_id', $userId);
                 $stmt->bindParam(':create_at', $create_at);
@@ -71,7 +64,7 @@ class Post
         }
     }
 
-    public function EditPost($auth, $userId, $postId, $postFile, $postContent){
+    public function EditPost($auth, $userId, $postId, $postContent){
         try {
             if (empty($auth))
                 return 'token_not_valid';
@@ -86,26 +79,11 @@ class Post
                     return 'post_not_found';
 
                 $content = isset($postContent) && !empty($postContent) ? $postContent: $get_post['content'];
-                $file_url = $get_post['file_url'];
 
-                if(isset($postFile) && !empty($postFile)){
-                    if (!empty($file_url) && !empty($postFile)) {
-                        if ($this->fileManager->RemoveOldFile($file_url, POST_UPLOAD_DIR)) {
-                            $file_url = $this->fileManager->UploadFile($postFile, POST_UPLOAD_DIR, POST_UPLOAD_URL);
-                        }else{
-                            return 'file_remove_error';
-                        }
-                    }else{
-                        $file_url = $this->fileManager->UploadFile($postFile, POST_UPLOAD_DIR, POST_UPLOAD_URL);
-                    }
-                }
+                $query = sprintf('UPDATE %s SET content=:content', self::$table_name);
 
-                $query = sprintf('UPDATE %s SET file_url=:file_url, content=:content', self::$table_name);
-
-                $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
                 $stmt = $this->conn->prepare($query);
 
-                $stmt->bindParam(':file_url', $file_url);
                 $stmt->bindParam(':content', $content);
 
                 if ($stmt->execute()) {
@@ -144,7 +122,8 @@ class Post
                     $stmt->bindParam(':id', $postId);
 
                     if ($stmt->execute()) {
-                        return 'post_deleted';
+                        if($this->DeleteFileByPostId($postId))
+                            return 'post_deleted';
                     } else {
                         return 'failed_post_delete';
                     }
@@ -177,7 +156,16 @@ class Post
 
                 if ($stmt->execute()) {
                     if ($stmt->rowCount()) {
-                        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+                        $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                        $return_values = [];
+
+                        foreach ($posts as $post){
+                            $files = $this->GetFilesByPostId($post['id']);
+                            $return_values['info'] = $post;
+                            $return_values['files'] = $files;
+                        }
+
+                        return $return_values;
                     } else {
                         return 'no_post';
                     }
@@ -201,15 +189,21 @@ class Post
 
             if ($this->jwt->Validate_Token($auth, $userId)) {
 
-                if(empty($postId))
+                if (empty($postId))
                     return 'post_id_require';
 
                 $get_result = $this->GetPostById($postId);
 
                 if ($get_result != null) {
                     $increasePostView = $this->IncreasePostView($postId);
-                    if( $increasePostView == true)
-                        return $this->GetPostById($postId);
+                    if ($increasePostView == true) {
+                        $files = $this->GetFilesByPostId($postId);
+
+                        return [
+                            'info' => $get_result,
+                            'files' => $files
+                        ];
+                    }
                 } else {
                     return 'post_not_found';
                 }
@@ -234,7 +228,12 @@ class Post
 
             if ($stmt->execute()) {
                 if ($stmt->rowCount()) {
-                    return $stmt->fetch(PDO::FETCH_ASSOC);
+                    $get_posts =$stmt->fetch(PDO::FETCH_ASSOC);
+                    $get_files = $this->GetFilesByPostId($get_posts['id']);
+                    return [
+                        'info' => $get_posts,
+                        'files' => $get_files,
+                    ];
                 } else {
                     return null;
                 }
@@ -390,6 +389,167 @@ class Post
             return 'PDO : ' . $pdo_exception->getMessage();
         } catch (Exception $exception) {
             return 'Exception : ' . $exception->getMessage();
+        }
+    }
+
+    public function UploadFile($auth, $userId, $postId, $postFile)
+    {
+        try {
+            if (empty($auth))
+                return 'token_not_valid';
+
+            if ($this->jwt->Validate_Token($auth, $userId)) {
+                if ($postFile['error'] > 0 || empty($userId))
+                    return 'file_user_required';
+
+                if ($this->GetPostById($postId) == null)
+                    return 'post_not_found';
+
+                $file_url = $this->fileManager->UploadFile($postFile, POST_UPLOAD_DIR, POST_UPLOAD_URL);
+
+                $query = sprintf('INSERT INTO %s (file_url, entity_id) VALUES (:file_url,:post_id)', self::$file_table_name);
+
+                $stmt = $this->conn->prepare($query);
+
+                $stmt->bindParam(':file_url', $file_url);
+                $stmt->bindParam(':post_id', $postId);
+
+                if ($stmt->execute()) {
+                    if ($stmt->rowCount()) {
+                        return $this->GetFileById($this->conn->lastInsertId());
+                    }
+                }
+                return false;
+            } else {
+                return 'token_not_valid';
+            }
+        } catch (PDOException $pdo_exception) {
+            return 'PDO Exception : ' . $pdo_exception->getMessage();
+        } catch (Exception $exception) {
+            return 'Exception : ' . $exception->getMessage();
+        }
+    }
+
+    private function DeleteFileByPostId($postId)
+    {
+        try {
+            if ($this->GetPostById($postId) == null)
+                return 'post_not_found';
+
+            $get_files = $this->GetFilesByPostId($postId);
+            foreach ($get_files as $file) {
+                if ($this->fileManager->RemoveOldFile($file['file_url'], POST_UPLOAD_DIR)) {
+                    $query = sprintf('DELETE FROM %s WHERE id=:id', self::$file_table_name);
+                    $stmt = $this->conn->prepare($query);
+                    $stmt->bindParam(':id', $file['id']);
+                    if ($stmt->execute())
+                        return true;
+                }
+            }
+            return false;
+        } catch (PDOException $pdo_exception) {
+            return 'PDO Exception : ' . $pdo_exception->getMessage();
+        } catch (Exception $exception) {
+            return 'Exception : ' . $exception->getMessage();
+        }
+    }
+
+    public function DeleteFileById($auth, $userId, $fileId)
+    {
+        try {
+            if (empty($auth))
+                return 'token_not_valid';
+
+            if ($this->jwt->Validate_Token($auth, $userId)) {
+
+                $get_file = $this->GetFileById($fileId);
+                if ($get_file == null)
+                    return 'file_not_found';
+
+                if ($this->fileManager->RemoveOldFile($get_file['file_url'], POST_UPLOAD_DIR)) {
+
+                    $query = sprintf('DELETE FROM %s WHERE id=:id', self::$file_table_name);
+
+                    $stmt = $this->conn->prepare($query);
+
+                    $stmt->bindParam(':id', $fileId);
+
+                    if ($stmt->execute()) {
+                        if ($stmt->rowCount()) {
+                            return 'file_deleted';
+                        }
+                    }
+                }
+                return 'failed_file_delete';
+            } else {
+                return 'token_not_valid';
+            }
+        } catch (PDOException $pdo_exception) {
+            return 'PDO Exception : ' . $pdo_exception->getMessage();
+        } catch (Exception $exception) {
+            return 'Exception : ' . $exception->getMessage();
+        }
+    }
+
+    public function GetFiles($auth, $userId, $postId)
+    {
+        try {
+            if (empty($auth))
+                return 'token_not_valid';
+
+            if ($this->jwt->Validate_Token($auth, $userId)) {
+                $get_files = $this->GetFilesByPostId($postId);
+                if ($get_files != null) {
+                    return $get_files;
+                }
+                return 'files_not_found';
+            }
+            return 'failed_files_get';
+        } catch (PDOException $pdo_exception) {
+            return 'PDO Exception : ' . $pdo_exception->getMessage();
+        } catch (Exception $exception) {
+            return 'Exception : ' . $exception->getMessage();
+        }
+    }
+
+    private function GetFilesByPostId($postId){
+        try {
+            $query = sprintf("SELECT * FROM %s WHERE entity_id = :id", self::$file_table_name);
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':id', $postId);
+
+            if ($stmt->execute()) {
+                if ($stmt->rowCount()) {
+                    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+                }
+            }
+            return 'failed_files_get';
+        } catch (PDOException $pdo_exception) {
+            return 'PDO Exception : ' . $pdo_exception->getMessage();
+        } catch (Exception $exception) {
+            return 'Exception : ' . $exception->getMessage();
+        }
+    }
+
+    private function GetFileById($fileId){
+        try {
+            $query = sprintf("SELECT * FROM %s WHERE id=:id", self::$file_table_name);
+
+            $stmt = $this->conn->prepare($query);
+
+            $stmt->bindParam(':id', $fileId);
+
+            if ($stmt->execute()) {
+                if ($stmt->rowCount()) {
+                    return $stmt->fetch(PDO::FETCH_ASSOC);
+                } else {
+                    return null;
+                }
+            } else {
+                return false;
+            }
+        } catch (PDOException $pdo_exception) {
+            return 'PDO Exception : ' . $pdo_exception->getMessage();
         }
     }
 }

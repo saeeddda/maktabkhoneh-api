@@ -23,13 +23,13 @@ if($_SERVER['REQUEST_METHOD'] === 'GET'){
     $request = apache_request_headers();
     $auth = isset($request['Authorization']) && !empty($request['Authorization']) ? str_replace('Bearer ','', $request['Authorization']) : '';
 
-    $story_result = $story->GetStory($auth,$_GET['user_id'],$_GET['story_id']);
+    $story_result = $story->GetFiles($auth,$_GET['user_id'],$_GET['story_id'] );
 
-    if($story_result == 'story_not_found'){
+    if($story_result == 'files_not_found'){
         http_response_code(400);
         echo json_encode([
             'data' => $story_result,
-            'msg' => 'Story or files not found',
+            'msg' => 'Files not found',
             'success' => false
         ]);
         return;
@@ -45,7 +45,7 @@ if($_SERVER['REQUEST_METHOD'] === 'GET'){
         http_response_code(200);
         echo json_encode([
             'data' => $story_result,
-            'msg' => 'Single story',
+            'msg' => 'Story files',
             'success' => true
         ]);
         return;

@@ -11,6 +11,7 @@ class Story
 {
     private $conn;
     private static $table_name = 'stories';
+    private static $file_table_name = 'files';
     private $jwt;
     private $fileManager;
     private $user;
@@ -24,15 +25,13 @@ class Story
         $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     }
 
-    public function AddStory($auth, $storyFile, $userId)
+    public function AddStory($auth, $userId)
     {
         try {
             if (empty($auth))
                 return 'token_not_valid';
 
             if ($this->jwt->Validate_Token($auth, $userId)) {
-                if ($storyFile['error'] > 0 || empty($userId))
-                    return 'file_user_required';
 
                 if ($this->user->GetUserById($userId) == null)
                     return 'user_not_found';
@@ -40,15 +39,10 @@ class Story
                 $create_at = time();
                 $end_at = GetExpireTime($create_at, 1);
 
-                $file_url = '';
-                if (!empty($storyFile))
-                    $file_url = $this->fileManager->UploadFile($storyFile, STORY_UPLOAD_DIR, STORY_UPLOAD_URL);
-
-                $query = sprintf('INSERT INTO %s (file_url, user_id, create_at, end_at) VALUES (:file_url,:user_id,:create_at,:end_at)', self::$table_name);
+                $query = sprintf('INSERT INTO %s (user_id, create_at, end_at) VALUES (:user_id,:create_at,:end_at)', self::$table_name);
 
                 $stmt = $this->conn->prepare($query);
 
-                $stmt->bindParam(':file_url', $file_url);
                 $stmt->bindParam(':user_id', $userId);
                 $stmt->bindParam(':create_at', $create_at);
                 $stmt->bindParam(':end_at', $end_at);
@@ -72,17 +66,14 @@ class Story
         }
     }
 
-    public function EditStory($auth, $userId, $storyId, $storyFile)
+    public function EditStory($auth, $userId, $storyId)
     {
         try {
             if (empty($auth))
                 return 'token_not_valid';
 
             if ($this->jwt->Validate_Token($auth, $userId)) {
-                if ($storyFile['error'] > 0 || empty($storyId))
-                    return 'file_user_required';
-
-                if($this->user->GetUserById($userId))
+                if ($this->user->GetUserById($userId))
                     return 'user_not_found';
 
                 $get_story = $this->GetStoryById($storyId);
@@ -92,25 +83,10 @@ class Story
                 $create_at = time();
                 $end_at = GetExpireTime($create_at, 1);
 
-                $file_url = $get_story['file_url'];
-
-                if(isset($storyFile) && !empty($storyFile)){
-                    if (!empty($file_url) && !empty($storyFile)) {
-                        if ($this->fileManager->RemoveOldFile($file_url, STORY_UPLOAD_DIR)) {
-                            $file_url = $this->fileManager->UploadFile($storyFile, STORY_UPLOAD_DIR, STORY_UPLOAD_URL);
-                        }else{
-                            return 'file_remove_error';
-                        }
-                    }else{
-                        $file_url = $this->fileManager->UploadFile($storyFile, STORY_UPLOAD_DIR, STORY_UPLOAD_URL);
-                    }
-                }
-
-                $query = sprintf('UPDATE %s SET file_url=:file_url, create_at=:create_at, end_at=:end_at', self::$table_name);
+                $query = sprintf('UPDATE %s SET create_at=:create_at, end_at=:end_at', self::$table_name);
 
                 $stmt = $this->conn->prepare($query);
 
-                $stmt->bindParam(':file_url', $file_url);
                 $stmt->bindParam(':create_at', $create_at);
                 $stmt->bindParam(':end_at', $end_at);
 
@@ -141,21 +117,17 @@ class Story
                 if ($get_result == null)
                     return 'story_not_found';
 
-                if ($this->fileManager->RemoveOldFile($get_result['file_url'], STORY_UPLOAD_DIR)) {
+                $query = sprintf("DELETE FROM %s WHERE id=:id", self::$table_name);
 
-                    $query = sprintf("DELETE FROM %s WHERE id=:id", self::$table_name);
+                $stmt = $this->conn->prepare($query);
 
-                    $stmt = $this->conn->prepare($query);
+                $stmt->bindParam(':id', $storyId);
 
-                    $stmt->bindParam(':id', $storyId);
-
-                    if ($stmt->execute()) {
+                if ($stmt->execute()) {
+                    if($this->DeleteFileByStoryId($storyId))
                         return 'story_deleted';
-                    } else {
-                        return 'failed_story_delete';
-                    }
                 } else {
-                    return 'failed_file_delete';
+                    return 'failed_story_delete';
                 }
             } else {
                 return 'token_not_valid';
@@ -183,7 +155,16 @@ class Story
 
                 if ($stmt->execute()) {
                     if ($stmt->rowCount()) {
-                        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+                        $stories = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                        $return_values = [];
+
+                        foreach ($stories as $story){
+                            $files = $this->GetFilesByStoryId($story['id']);
+                            $return_values['info'] = $story;
+                            $return_values['files'] = $files;
+                        }
+
+                        return $return_values;
                     } else {
                         return 'no_story';
                     }
@@ -210,7 +191,12 @@ class Story
                 $get_result = $this->GetStoryById($storyId);
 
                 if ($get_result != null) {
-                    return $get_result;
+                    $files = $this->GetFilesByStoryId($storyId);
+
+                    return [
+                        'info' => $get_result,
+                        'files' => $files
+                    ];
                 } else {
                     return 'story_not_found';
                 }
@@ -232,6 +218,167 @@ class Story
             $stmt = $this->conn->prepare($query);
 
             $stmt->bindParam(':id', $storyId);
+
+            if ($stmt->execute()) {
+                if ($stmt->rowCount()) {
+                    return $stmt->fetch(PDO::FETCH_ASSOC);
+                } else {
+                    return null;
+                }
+            } else {
+                return false;
+            }
+        } catch (PDOException $pdo_exception) {
+            return 'PDO Exception : ' . $pdo_exception->getMessage();
+        }
+    }
+
+    public function UploadFile($auth, $userId, $storyId, $storyFile)
+    {
+        try {
+            if (empty($auth))
+                return 'token_not_valid';
+
+            if ($this->jwt->Validate_Token($auth, $userId)) {
+                if ($storyFile['error'] > 0 || empty($userId))
+                    return 'file_user_required';
+
+                if ($this->GetStoryById($storyId) == null)
+                    return 'story_not_found';
+
+                $file_url = $this->fileManager->UploadFile($storyFile, STORY_UPLOAD_DIR, STORY_UPLOAD_URL);
+
+                $query = sprintf('INSERT INTO %s (file_url, entity_id) VALUES (:file_url,:story_id)', self::$file_table_name);
+
+                $stmt = $this->conn->prepare($query);
+
+                $stmt->bindParam(':file_url', $file_url);
+                $stmt->bindParam(':story_id', $storyId);
+
+                if ($stmt->execute()) {
+                    if ($stmt->rowCount()) {
+                        return $this->GetFileById($this->conn->lastInsertId());
+                    }
+                }
+                return false;
+            } else {
+                return 'token_not_valid';
+            }
+        } catch (PDOException $pdo_exception) {
+            return 'PDO Exception : ' . $pdo_exception->getMessage();
+        } catch (Exception $exception) {
+            return 'Exception : ' . $exception->getMessage();
+        }
+    }
+
+    private function DeleteFileByStoryId($storyId)
+    {
+        try {
+            if ($this->GetStoryById($storyId) == null)
+                return 'story_not_found';
+
+            $get_files = $this->GetFilesByStoryId($storyId);
+            foreach ($get_files as $file) {
+                if ($this->fileManager->RemoveOldFile($file['file_url'], STORY_UPLOAD_DIR)) {
+                    $query = sprintf('DELETE FROM %s WHERE id=:id', self::$file_table_name);
+                    $stmt = $this->conn->prepare($query);
+                    $stmt->bindParam(':id', $file['id']);
+                    if ($stmt->execute())
+                        return true;
+                }
+            }
+            return false;
+        } catch (PDOException $pdo_exception) {
+            return 'PDO Exception : ' . $pdo_exception->getMessage();
+        } catch (Exception $exception) {
+            return 'Exception : ' . $exception->getMessage();
+        }
+    }
+
+    public function DeleteFileById($auth, $userId, $fileId)
+    {
+        try {
+            if (empty($auth))
+                return 'token_not_valid';
+
+            if ($this->jwt->Validate_Token($auth, $userId)) {
+
+                $get_file = $this->GetFileById($fileId);
+                if ($get_file == null)
+                    return 'file_not_found';
+
+                if ($this->fileManager->RemoveOldFile($get_file['file_url'], STORY_UPLOAD_DIR)) {
+
+                    $query = sprintf('DELETE FROM %s WHERE id=:id', self::$file_table_name);
+
+                    $stmt = $this->conn->prepare($query);
+
+                    $stmt->bindParam(':id', $fileId);
+
+                    if ($stmt->execute()) {
+                        if ($stmt->rowCount()) {
+                            return 'file_deleted';
+                        }
+                    }
+                }
+                return 'failed_file_delete';
+            } else {
+                return 'token_not_valid';
+            }
+        } catch (PDOException $pdo_exception) {
+            return 'PDO Exception : ' . $pdo_exception->getMessage();
+        } catch (Exception $exception) {
+            return 'Exception : ' . $exception->getMessage();
+        }
+    }
+
+    public function GetFiles($auth, $userId, $storyId)
+    {
+        try {
+            if (empty($auth))
+                return 'token_not_valid';
+
+            if ($this->jwt->Validate_Token($auth, $userId)) {
+                $get_files = $this->GetFilesByStoryId($storyId);
+                if ($get_files != null) {
+                    return $get_files;
+                }
+                return 'files_not_found';
+            }
+            return 'failed_files_get';
+        } catch (PDOException $pdo_exception) {
+            return 'PDO Exception : ' . $pdo_exception->getMessage();
+        } catch (Exception $exception) {
+            return 'Exception : ' . $exception->getMessage();
+        }
+    }
+
+    private function GetFilesByStoryId($storyId){
+        try {
+            $query = sprintf("SELECT * FROM %s WHERE entity_id = :id", self::$file_table_name);
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':id', $storyId);
+
+            if ($stmt->execute()) {
+                if ($stmt->rowCount()) {
+                    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+                }
+            }
+            return 'failed_files_get';
+        } catch (PDOException $pdo_exception) {
+            return 'PDO Exception : ' . $pdo_exception->getMessage();
+        } catch (Exception $exception) {
+            return 'Exception : ' . $exception->getMessage();
+        }
+    }
+
+    private function GetFileById($fileId){
+        try {
+            $query = sprintf("SELECT * FROM %s WHERE id=:id", self::$file_table_name);
+
+            $stmt = $this->conn->prepare($query);
+
+            $stmt->bindParam(':id', $fileId);
 
             if ($stmt->execute()) {
                 if ($stmt->rowCount()) {

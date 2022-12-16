@@ -60,7 +60,7 @@ class Authentication
                             'aet' => $expire_time,
                             'uid'=> $select_user['id']
                         ];
-                        return $this->jwt->Encode_JWT($payload);
+                        return 'Bearer ' . $this->jwt->Encode_JWT($payload);
                     }else{
                         return 'user_not_active';
                     }

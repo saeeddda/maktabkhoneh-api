@@ -21,6 +21,7 @@ class Story
         $this->jwt = new JWT_Util();
         $this->fileManager = new File_Manager();
         $this->user = new User($conn);
+        $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     }
 
     public function AddStory($auth, $storyFile, $userId)
@@ -45,7 +46,6 @@ class Story
 
                 $query = sprintf('INSERT INTO %s (file_url, user_id, create_at, end_at) VALUES (:file_url,:user_id,:create_at,:end_at)', self::$table_name);
 
-                $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
                 $stmt = $this->conn->prepare($query);
 
                 $stmt->bindParam(':file_url', $file_url);
@@ -89,17 +89,25 @@ class Story
                 if ($get_story == null)
                     return 'story_not_found';
 
-                $file_url = $get_story['file_url'];
-                if (!empty($file_url) && !empty($storyFile))
-                    if ($this->fileManager->RemoveOldFile($file_url, STORY_UPLOAD_DIR))
-                        $file_url = $this->fileManager->UploadFile($storyFile, STORY_UPLOAD_DIR, STORY_UPLOAD_URL);
-
                 $create_at = time();
                 $end_at = GetExpireTime($create_at, 1);
 
+                $file_url = $get_story['file_url'];
+
+                if(isset($storyFile) && !empty($storyFile)){
+                    if (!empty($file_url) && !empty($storyFile)) {
+                        if ($this->fileManager->RemoveOldFile($file_url, STORY_UPLOAD_DIR)) {
+                            $file_url = $this->fileManager->UploadFile($storyFile, STORY_UPLOAD_DIR, STORY_UPLOAD_URL);
+                        }else{
+                            return 'file_remove_error';
+                        }
+                    }else{
+                        $file_url = $this->fileManager->UploadFile($storyFile, STORY_UPLOAD_DIR, STORY_UPLOAD_URL);
+                    }
+                }
+
                 $query = sprintf('UPDATE %s SET file_url=:file_url, create_at=:create_at, end_at=:end_at', self::$table_name);
 
-                $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
                 $stmt = $this->conn->prepare($query);
 
                 $stmt->bindParam(':file_url', $file_url);
@@ -109,12 +117,9 @@ class Story
                 if ($stmt->execute()) {
                     if ($stmt->rowCount()) {
                         return $this->GetStoryById($this->conn->lastInsertId());
-                    } else {
-                        return 'failed_story_edit';
                     }
-                } else {
-                    return false;
                 }
+                return 'failed_story_edit';
             } else {
                 return 'token_not_valid';
             }
@@ -140,7 +145,6 @@ class Story
 
                     $query = sprintf("DELETE FROM %s WHERE id=:id", self::$table_name);
 
-                    $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
                     $stmt = $this->conn->prepare($query);
 
                     $stmt->bindParam(':id', $storyId);
@@ -175,7 +179,6 @@ class Story
                 else
                     $query = sprintf("SELECT * FROM %s", self::$table_name);
 
-                $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
                 $stmt = $this->conn->prepare($query);
 
                 if ($stmt->execute()) {
@@ -226,7 +229,6 @@ class Story
         try {
             $query = sprintf("SELECT * FROM %s WHERE id = :id", self::$table_name);
 
-            $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             $stmt = $this->conn->prepare($query);
 
             $stmt->bindParam(':id', $storyId);

@@ -21,6 +21,7 @@ class Authentication
         $this->jwt = new JWT_Util();
         $this->user= new User($conn);
         $this->file_manager = new File_Manager();
+        $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     }
 
     public function Login($username, $email, $password)
@@ -38,7 +39,6 @@ class Authentication
             if (!empty($email))
                 $query = "SELECT * FROM " . self::$table_name . " WHERE email='" . $email . "' AND password='" . md5($password) . "'";
 
-            $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             $stmt = $this->conn->prepare($query);
 
             if ($stmt->execute()) {
@@ -107,7 +107,6 @@ class Authentication
 
             $query = sprintf("INSERT INTO %s (username,password,full_name,email,user_avatar,phone,active_token,is_active) VALUES (:username,:password,:full_name,:email,:user_avatar,:phone,:active_token,0)", self::$table_name);
 
-            $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             $stmt = $this->conn->prepare($query);
 
             $stmt->bindParam(':username', $username);

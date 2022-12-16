@@ -5,16 +5,16 @@ header("Access-Control-Allow-Methods: GET");
 
 include_once $_SERVER['DOCUMENT_ROOT'] . '/consts/configs.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/utils/database.php';
-include_once $_SERVER['DOCUMENT_ROOT'] . '/controllers/Story.php';
+include_once $_SERVER['DOCUMENT_ROOT'] . '/controllers/Post.php';
 
 if($_SERVER['REQUEST_METHOD'] === 'GET'){
     $db = new Database();
-    $story = new Story($db->GetConnection());
+    $post = new Post($db->GetConnection());
 
-    if(!isset($_GET['user_id']) && !isset($_GET['story_id'])){
+    if(!isset($_GET['user_id']) && !isset($_GET['post_id'])){
         echo json_encode([
             'data' => 'user_story_required',
-            'msg' => 'User id and story id is required.',
+            'msg' => 'User id and post id is required.',
             'success' => false
         ]);
         return;
@@ -23,12 +23,20 @@ if($_SERVER['REQUEST_METHOD'] === 'GET'){
     $request = apache_request_headers();
     $auth = isset($request['Authorization']) && !empty($request['Authorization']) ? str_replace('Bearer ','', $request['Authorization']) : '';
 
-    $result = $story->GetStory($auth,$_GET['user_id'],$_GET['story_id']);
-    if($result == 'story_not_found'){
+    $result = $post->GetPost($auth,$_GET['user_id'],$_GET['post_id']);
+    if($result == 'post_not_found'){
+        http_response_code(404);
+        echo json_encode([
+            'data' => $result,
+            'msg' => 'Post not found.',
+            'success' => false
+        ]);
+        return;
+    }else if($result == 'post_id_require'){
         http_response_code(400);
         echo json_encode([
             'data' => $result,
-            'msg' => 'Story not found',
+            'msg' => 'Post id require',
             'success' => false
         ]);
         return;
@@ -40,11 +48,11 @@ if($_SERVER['REQUEST_METHOD'] === 'GET'){
             'success' => false
         ]);
         return;
-    }else if($result){
+    }else if($result != null){
         http_response_code(200);
         echo json_encode([
             'data' => $result,
-            'msg' => 'Single story',
+            'msg' => 'Single post',
             'success' => true
         ]);
         return;

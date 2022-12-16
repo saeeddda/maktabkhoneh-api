@@ -18,6 +18,7 @@ class User
         $this->conn = $db_conn;
         $this->jwt = new JWT_Util();
         $this->file_manager = new File_Manager();
+        $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     }
 
     public function GetUser($auth, $username, $userId){
@@ -47,7 +48,6 @@ class User
             if($this->jwt->Validate_Token($auth, $userId)) {
                 $query = sprintf("SELECT * FROM %s ORDER BY id", self::$table_name);
 
-                $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
                 $stmt = $this->conn->prepare($query);
 
                 if ($stmt->execute()) {
@@ -71,7 +71,6 @@ class User
         try {
             $query = sprintf("SELECT * FROM %s WHERE id = :id", self::$table_name);
 
-            $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             $stmt = $this->conn->prepare($query);
 
             $stmt->bindParam(':id',$id);
@@ -95,7 +94,6 @@ class User
         try {
             $query = sprintf("SELECT * FROM %s WHERE email=:email", self::$table_name);
 
-            $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             $stmt = $this->conn->prepare($query);
 
             $stmt->bindParam(':email',$email);
@@ -119,7 +117,6 @@ class User
         try {
             $query = "SELECT * FROM " . self::$table_name . " WHERE username LIKE '%" . $username . "%'";
 
-            $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             $stmt = $this->conn->prepare($query);
 
             if ($stmt->execute()) {
@@ -141,7 +138,6 @@ class User
         try {
             $query = sprintf("SELECT * FROM %s WHERE phone=:phone", self::$table_name);
 
-            $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             $stmt = $this->conn->prepare($query);
 
             $stmt->bindParam(':phone',$phone);
@@ -196,7 +192,6 @@ class User
 
                 $query = sprintf("INSERT INTO %s (username,password,full_name,email,user_avatar,phone,active_token,is_active) VALUES (:username,:password,:full_name,:email,:user_avatar,:phone,:active_token,0)", self::$table_name);
 
-                $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
                 $stmt = $this->conn->prepare($query);
 
                 $stmt->bindParam(':username', $username);
@@ -254,7 +249,6 @@ class User
 
                 $query = sprintf("UPDATE %s SET username=:username, password=:password, full_name=:full_name, email=:email, user_avatar=:user_avatar, phone=:phone, active_token=:active_token WHERE id=:id", self::$table_name);
 
-                $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
                 $stmt = $this->conn->prepare($query);
 
                 $stmt->bindParam(':id', $args['edit_id']);
@@ -299,7 +293,6 @@ class User
 
                     $query = sprintf("DELETE FROM %s WHERE id=:id", self::$table_name);
 
-                    $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
                     $stmt = $this->conn->prepare($query);
 
                     $stmt->bindParam(':id', $deleteId);
@@ -344,7 +337,6 @@ class User
                 if ($get_follower != null) {
                     $query = sprintf("DELETE FROM %s WHERE user_id=:user_id AND follower_id=:follower_id", self::$Follower_table_name);
 
-                    $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
                     $stmt = $this->conn->prepare($query);
 
                     $stmt->bindParam(':user_id', $userId);
@@ -362,7 +354,6 @@ class User
                 } else {
                     $query = sprintf("INSERT INTO %s SET user_id=:user_id, follower_id=:follower_id", self::$Follower_table_name);
 
-                    $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
                     $stmt = $this->conn->prepare($query);
 
                     $stmt->bindParam(':user_id', $userId);
@@ -392,7 +383,6 @@ class User
         try {
             $query = sprintf("SELECT * FROM %s WHERE user_id=:user_id AND follower_id=:follower_id", self::$Follower_table_name);
 
-            $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             $stmt = $this->conn->prepare($query);
 
             $stmt->bindParam(':user_id',$userId);
@@ -422,7 +412,6 @@ class User
 
                     $query = "UPDATE " . self::$table_name . " SET active_token=0, is_active=1 WHERE id=" . $userId;
 
-                    $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
                     $stmt = $this->conn->prepare($query);
 
                     if ($stmt->execute()) {

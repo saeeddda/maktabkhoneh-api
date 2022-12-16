@@ -5,32 +5,34 @@ header("Access-Control-Allow-Methods: POST");
 
 include_once $_SERVER['DOCUMENT_ROOT'] . '/consts/configs.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/utils/database.php';
-include_once $_SERVER['DOCUMENT_ROOT'] . '/controllers/Story.php';
+include_once $_SERVER['DOCUMENT_ROOT'] . '/controllers/Post.php';
 
 if($_SERVER['REQUEST_METHOD'] === 'POST'){
     $db = new Database();
-    $story = new Story($db->GetConnection());
+    $post = new Post($db->GetConnection());
 
-    if(!isset($_POST['user_id']) && !isset($_POST['story_id'])){
+    if(!isset($_FILES['post_file']) && !isset($_POST['user_id'])){
         echo json_encode([
             'data' => 'file_user_required',
-            'msg' => 'Story file and user id is required.',
+            'msg' => 'Post file and user id is required.',
             'success' => false
         ]);
         return;
     }
 
-    $storyFile = isset($_FILES['story_file']) && !empty($_FILES['story_file']) ? $_FILES['story_file'] : '';
-
     $request = apache_request_headers();
     $auth = isset($request['Authorization']) && !empty($request['Authorization']) ? str_replace('Bearer ','', $request['Authorization']) : '';
 
-    $result = $story->EditStory($auth,$_POST['user_id'] , $_POST['story_id'], $storyFile);
+    $post_file = $_FILES['post_file'];
+    $user_id = $_POST['user_id'];
+    $content =  isset($_POST['content']) && !empty($_POST['content']) ? $_POST['content'] : '';
+
+    $result = $post->AddPost($auth,$user_id, $post_file, $content);
     if($result == 'file_user_required'){
         http_response_code(400);
         echo json_encode([
             'data' => $result,
-            'msg' => 'Story id and user id is required.',
+            'msg' => 'Story file and user id is required.',
             'success' => false
         ]);
         return;
@@ -42,14 +44,6 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
             'success' => false
         ]);
         return;
-    }else if($result == 'story_not_found'){
-        http_response_code(404);
-        echo json_encode([
-            'data' => $result,
-            'msg' => 'Story not found',
-            'success' => false
-        ]);
-        return;
     }else if($result == 'token_not_valid'){
         http_response_code(401);
         echo json_encode([
@@ -58,11 +52,11 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
             'success' => false
         ]);
         return;
-    }else if($result == 'failed_story_edit'){
+    }else if($result == 'failed_post_add'){
         http_response_code(400);
         echo json_encode([
             'data' => $result,
-            'msg' => 'Failed to edit story',
+            'msg' => 'Failed to add post',
             'success' => false
         ]);
         return;
@@ -70,7 +64,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
         http_response_code(200);
         echo json_encode([
             'data' => $result,
-            'msg' => 'Story edited',
+            'msg' => 'Post added',
             'success' => true
         ]);
         return;

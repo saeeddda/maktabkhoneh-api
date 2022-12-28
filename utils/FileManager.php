@@ -6,7 +6,7 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/utils/utils.php';
 class File_Manager
 {
     public function UploadFile($image_file, $upload_dir, $upload_url){
-        if(in_array($image_file['type'], VALID_AVATAR_MIME)) {
+        if(in_array($image_file['type'], VALID_UPLOAD_MIME)) {
             if($image_file['size'] < ConvertSizeNameToByte(MAX_AVATAR_FILE_SIZE)) {
                 $new_name = date("YmdHis") . '.' . explode('.', $image_file['name'])[1];
                 $new_destination = $upload_dir . $new_name;

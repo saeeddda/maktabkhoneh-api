@@ -9,12 +9,12 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/controllers/User.php';
 
 class Story
 {
-    private $conn;
-    private static $table_name = 'stories';
-    private static $file_table_name = 'files';
-    private $jwt;
-    private $fileManager;
-    private $user;
+    private PDO $conn;
+    private static string $table_name = 'stories';
+    private static string $file_table_name = 'files';
+    private JWT_Util $jwt;
+    private File_Manager $fileManager;
+    private User $user;
 
     public function __construct($conn)
     {

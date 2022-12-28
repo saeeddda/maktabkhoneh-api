@@ -13,7 +13,7 @@ if(!defined('DB_PASSWORD'))
     define('DB_PASSWORD', '');
 
 if(!defined('DB_NAME'))
-    define('DB_NAME', 'sasan-api');
+    define('DB_NAME', 'maktab');
 
 if(!defined('DB_CHARSET'))
     define('DB_CHARSET', 'utf8mb4');

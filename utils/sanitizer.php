@@ -1,7 +1,8 @@
 <?php
 
 function sanitize_strings($string){
-    return filter_var($string, FILTER_SANITIZE_STRING);
+//    return filter_var($string, FILTER_SANITIZE_STRING);
+    return htmlspecialchars($string);
 }
 
 function sanitize_email($email){

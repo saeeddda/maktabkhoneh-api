@@ -10,13 +10,13 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/controllers/User.php';
 
 class Post
 {
-    private $conn;
-    private static $table_name = 'posts';
-    private static $likes_table_name = 'likes';
-    private static $file_table_name = 'files';
-    private $jwt;
-    private $fileManager;
-    private $user;
+    private PDO $conn;
+    private static string $table_name = 'posts';
+    private static string $likes_table_name = 'likes';
+    private static string $file_table_name = 'files';
+    private JWT_Util $jwt;
+    private File_Manager $fileManager;
+    private User $user;
 
     public function __construct($conn)
     {

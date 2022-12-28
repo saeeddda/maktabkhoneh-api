@@ -7,11 +7,11 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/utils/mail.php';
 
 class User
 {
-    private $conn;
-    private static $table_name = 'users';
-    private static $Follower_table_name = 'followers';
-    private $jwt;
-    private $file_manager;
+    private PDO $conn;
+    private static string $table_name = 'users';
+    private static string $Follower_table_name = 'followers';
+    private JWT_Util $jwt;
+    private File_Manager $file_manager;
 
     public function __construct($db_conn)
     {

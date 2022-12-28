@@ -9,11 +9,11 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/controllers/User.php';
 
 class Authentication
 {
-    private $conn;
-    private $jwt;
-    private static $table_name = 'users';
-    private $user;
-    private $file_manager;
+    private PDO $conn;
+    private static string $table_name = 'users';
+    private JWT_Util $jwt;
+    private User $user;
+    private File_Manager $file_manager;
 
     public function __construct($conn)
     {

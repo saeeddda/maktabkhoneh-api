@@ -7,3 +7,4 @@
  - Delete unnecessary user edit api parameter
  - Change user activation api to auth routes
  - Add user verify token to users table
+ - Add resend code api route

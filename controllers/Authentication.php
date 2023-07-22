@@ -143,12 +143,12 @@ class Authentication
         }
     }
 
-    public function verifyUserToken($userId, $verify_token, $active_token){
+    public function verifyUserToken($userId, $verifyToken, $activeToken){
         try {
             $get_result = $this->user->GetUserById($userId);
 
             if (!empty($get_result) && !$get_result['is_active']) {
-                if($get_result['verify_token'] == $verify_token && $get_result['active_token'] == $active_token){
+                if($get_result['verify_token'] == $verifyToken && $get_result['active_token'] == $activeToken){
 
                     $query = "UPDATE " . self::$table_name . " SET verify_token=null, active_token=null, is_active=1 WHERE id=" . $userId;
 
@@ -183,6 +183,45 @@ class Authentication
             return true;
         } else {
             return false;
+        }
+    }
+
+    public function resendActivationToken($userId, $verifyToken){
+        try {
+            $get_user_result = '';
+
+            if(!empty($userId)) $get_user_result = $this->user->GetUserById($userId);
+            if (empty($get_user_result)) return 'user_not_found';
+            if($verifyToken != $get_user_result['verify_token']) return 'verify_token_not_valid';
+            if($get_user_result['is_active']) return 'user_activated';
+
+            $active_token = generateActivateToken();
+            $verify_token = generateRandomString();
+
+            $query = sprintf("UPDATE %s SET verify_token='%s', active_token='%s'", self::$table_name, $verify_token, $active_token);
+
+            $stmt = $this->conn->prepare($query);
+
+            if ($stmt->execute()) {
+                if ($stmt->rowCount()) {
+                    $user = $this->user->GetUserById($userId);
+                    send_mail($user['email'], 'فعالسازی حساب کاربری', 'حساب کاربری شما غیرفعال میباشد. برای فعالسازی لطفاً کد زیر را در اپلیکشین وارد کنید : ' . $user['active_token']);
+
+                    return [
+                        'user_id' => $user['id'],
+                        'user_email' => $user['email'],
+                        'verify_token' => $verify_token,
+                    ];
+                } else {
+                    return 'failed_user_add';
+                }
+            } else {
+                return false;
+            }
+        } catch (\PDOException $pdo_exception) {
+            return 'PDO : ' . $pdo_exception->getMessage();
+        } catch (\Exception $exception) {
+            return 'Exception : ' . $exception->getMessage();
         }
     }
 }

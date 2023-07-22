@@ -10,15 +10,13 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 
     $request = apache_request_headers();
 
-    $db = new Database();
-    $user = new User($db->GetConnection());
+    $user = new User(GetConnection());
 
-    $userId = $_POST['user_id'];
     $deleteId = $_POST['delete_id'];
 
     $auth = isset($request['Authorization']) && !empty($request['Authorization']) ? str_replace('Bearer ','', $request['Authorization']) : '';
 
-    $result = $user->DeleteUser($auth,$userId, $deleteId);
+    $result = $user->DeleteUser($auth, $deleteId);
 
     if($result) {
         http_response_code(200);

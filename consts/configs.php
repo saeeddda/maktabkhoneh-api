@@ -13,7 +13,7 @@ if(!defined('DB_PASSWORD'))
     define('DB_PASSWORD', '');
 
 if(!defined('DB_NAME'))
-    define('DB_NAME', 'maktab');
+    define('DB_NAME', 'sasan-api');
 
 if(!defined('DB_CHARSET'))
     define('DB_CHARSET', 'utf8mb4');
@@ -45,23 +45,23 @@ if(!defined('STORY_UPLOAD_URL'))
 if(!defined('MAX_AVATAR_FILE_SIZE'))
     define('MAX_AVATAR_FILE_SIZE', '4MB');
 
-if(!defined('VALID_UPLOAD_MIME'))
-    define('VALID_UPLOAD_MIME', ['image/jpg','image/png','image/jpeg']);
+if(!defined('VALID_AVATAR_MIME'))
+    define('VALID_AVATAR_MIME', ['image/jpg','image/png','image/jpeg']);
 
 if(!defined('MAIL_HOST'))
-    define('MAIL_HOST', '');
+    define('MAIL_HOST', 'sasansafari.com');
 
 if(!defined('MAIL_PORT'))
-    define('MAIL_PORT', '');
+    define('MAIL_PORT', '465');
 
 if(!defined('MAIL_USERNAME'))
-    define('MAIL_USERNAME', '');
+    define('MAIL_USERNAME', 'system@maktabkhoneh-api.sasansafari.com');
 
 if(!defined('MAIL_PASSWORD'))
-    define('MAIL_PASSWORD', '');
+    define('MAIL_PASSWORD', 'Maktabkhone1401');
 
 if(!defined('MAIL_NAME'))
-    define('MAIL_NAME', '');
+    define('MAIL_NAME', 'تیم پشتیبانی');
 
 if(!defined('MAIL_FROM'))
-    define('MAIL_FROM', '');
+    define('MAIL_FROM', 'maktabkhone@sasansafari.com');

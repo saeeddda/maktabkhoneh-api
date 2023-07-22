@@ -8,8 +8,7 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/utils/database.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/controllers/Post.php';
 
 if($_SERVER['REQUEST_METHOD'] === 'GET'){
-    $db = new Database();
-    $post = new Post($db->GetConnection());
+    $post = new Post(GetConnection());
 
     if(!isset($_GET['user_id']) && !isset($_GET['post_id'])){
         echo json_encode([

@@ -11,8 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     $request = apache_request_headers();
 
-    $db = new Database();
-    $user = new User($db->GetConnection());
+    $user = new User(GetConnection());
 
     $args = [
         'username' => isset($_POST['username']) && !empty($_POST['username']) ? strtolower(sanitize_strings($_POST['username'])) : '',

@@ -8,8 +8,7 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/utils/database.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/controllers/User.php';
 
 if($_SERVER['REQUEST_METHOD'] === 'GET') {
-    $db = new Database();
-    $user = new User($db->GetConnection());
+    $user = new User(GetConnection());
 
     $request = apache_request_headers();
 
@@ -20,7 +19,7 @@ if($_SERVER['REQUEST_METHOD'] === 'GET') {
 
     $auth = isset($request['Authorization']) && !empty($request['Authorization']) ? str_replace('Bearer ','', $request['Authorization']) : '';
 
-    $get_user_result = $user->GetUser($auth, $_GET['username'],$_GET['user_id']);
+    $get_user_result = $user->GetUser($auth, $_GET['username'], $_GET['user_id']);
 
     if($get_user_result == 'not_found'){
         http_response_code(404);

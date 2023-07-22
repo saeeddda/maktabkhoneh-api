@@ -9,8 +9,7 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/controllers/User.php';
 if($_SERVER['REQUEST_METHOD'] == 'POST'){
     $request = apache_request_headers();
 
-    $db = new Database();
-    $user = new User($db->GetConnection());
+    $user = new User(GetConnection());
 
     $auth = isset($request['Authorization']) && !empty($request['Authorization']) ? str_replace('Bearer ','', $request['Authorization']) : '';
 

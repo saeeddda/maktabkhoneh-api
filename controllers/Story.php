@@ -37,7 +37,7 @@ class Story
                     return 'user_not_found';
 
                 $create_at = time();
-                $end_at = GetExpireTime($create_at, 1);
+                $end_at = getExpireTime($create_at, 1);
 
                 $query = sprintf('INSERT INTO %s (user_id, create_at, end_at) VALUES (:user_id,:create_at,:end_at)', self::$table_name);
 
@@ -59,9 +59,9 @@ class Story
             } else {
                 return 'token_not_valid';
             }
-        } catch (PDOException $pdo_exception) {
+        } catch (\PDOException $pdo_exception) {
             return 'PDO Exception : ' . $pdo_exception->getMessage();
-        } catch (Exception $exception) {
+        } catch (\Exception $exception) {
             return 'Exception : ' . $exception->getMessage();
         }
     }
@@ -81,7 +81,7 @@ class Story
                     return 'story_not_found';
 
                 $create_at = time();
-                $end_at = GetExpireTime($create_at, 1);
+                $end_at = getExpireTime($create_at, 1);
 
                 $query = sprintf('UPDATE %s SET create_at=:create_at, end_at=:end_at', self::$table_name);
 
@@ -99,9 +99,9 @@ class Story
             } else {
                 return 'token_not_valid';
             }
-        } catch (PDOException $pdo_exception) {
+        } catch (\PDOException $pdo_exception) {
             return 'PDO Exception : ' . $pdo_exception->getMessage();
-        } catch (Exception $exception) {
+        } catch (\Exception $exception) {
             return 'Exception : ' . $exception->getMessage();
         }
     }
@@ -132,9 +132,9 @@ class Story
             } else {
                 return 'token_not_valid';
             }
-        } catch (PDOException $pdo_exception) {
+        } catch (\PDOException $pdo_exception) {
             return 'PDO : ' . $pdo_exception->getMessage();
-        } catch (Exception $exception) {
+        } catch (\Exception $exception) {
             return 'Exception : ' . $exception->getMessage();
         }
     }
@@ -174,9 +174,9 @@ class Story
             } else {
                 return 'token_not_valid';
             }
-        } catch (PDOException $pdo_exception) {
+        } catch (\PDOException $pdo_exception) {
             return 'PDO : ' . $pdo_exception->getMessage();
-        } catch (Exception $exception) {
+        } catch (\Exception $exception) {
             return 'Exception : ' . $exception->getMessage();
         }
     }
@@ -203,9 +203,9 @@ class Story
             } else {
                 return 'token_not_valid';
             }
-        } catch (PDOException $pdo_exception) {
+        } catch (\PDOException $pdo_exception) {
             return 'PDO : ' . $pdo_exception->getMessage();
-        } catch (Exception $exception) {
+        } catch (\Exception $exception) {
             return 'Exception : ' . $exception->getMessage();
         }
     }
@@ -228,7 +228,7 @@ class Story
             } else {
                 return false;
             }
-        } catch (PDOException $pdo_exception) {
+        } catch (\PDOException $pdo_exception) {
             return 'PDO Exception : ' . $pdo_exception->getMessage();
         }
     }
@@ -264,9 +264,9 @@ class Story
             } else {
                 return 'token_not_valid';
             }
-        } catch (PDOException $pdo_exception) {
+        } catch (\PDOException $pdo_exception) {
             return 'PDO Exception : ' . $pdo_exception->getMessage();
-        } catch (Exception $exception) {
+        } catch (\Exception $exception) {
             return 'Exception : ' . $exception->getMessage();
         }
     }
@@ -288,9 +288,9 @@ class Story
                 }
             }
             return false;
-        } catch (PDOException $pdo_exception) {
+        } catch (\PDOException $pdo_exception) {
             return 'PDO Exception : ' . $pdo_exception->getMessage();
-        } catch (Exception $exception) {
+        } catch (\Exception $exception) {
             return 'Exception : ' . $exception->getMessage();
         }
     }
@@ -325,9 +325,9 @@ class Story
             } else {
                 return 'token_not_valid';
             }
-        } catch (PDOException $pdo_exception) {
+        } catch (\PDOException $pdo_exception) {
             return 'PDO Exception : ' . $pdo_exception->getMessage();
-        } catch (Exception $exception) {
+        } catch (\Exception $exception) {
             return 'Exception : ' . $exception->getMessage();
         }
     }
@@ -346,9 +346,9 @@ class Story
                 return 'files_not_found';
             }
             return 'failed_files_get';
-        } catch (PDOException $pdo_exception) {
+        } catch (\PDOException $pdo_exception) {
             return 'PDO Exception : ' . $pdo_exception->getMessage();
-        } catch (Exception $exception) {
+        } catch (\Exception $exception) {
             return 'Exception : ' . $exception->getMessage();
         }
     }
@@ -365,9 +365,9 @@ class Story
                 }
             }
             return 'failed_files_get';
-        } catch (PDOException $pdo_exception) {
+        } catch (\PDOException $pdo_exception) {
             return 'PDO Exception : ' . $pdo_exception->getMessage();
-        } catch (Exception $exception) {
+        } catch (\Exception $exception) {
             return 'Exception : ' . $exception->getMessage();
         }
     }
@@ -389,7 +389,7 @@ class Story
             } else {
                 return false;
             }
-        } catch (PDOException $pdo_exception) {
+        } catch (\PDOException $pdo_exception) {
             return 'PDO Exception : ' . $pdo_exception->getMessage();
         }
     }

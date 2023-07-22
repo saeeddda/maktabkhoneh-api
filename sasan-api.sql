@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Dec 16, 2022 at 04:48 PM
+-- Generation Time: Jul 22, 2023 at 05:56 PM
 -- Server version: 5.7.33
 -- PHP Version: 7.4.19
 
@@ -99,6 +99,7 @@ CREATE TABLE `users` (
   `email` text COLLATE utf8mb4_persian_ci NOT NULL,
   `user_avatar` text COLLATE utf8mb4_persian_ci,
   `phone` text COLLATE utf8mb4_persian_ci,
+  `verify_token` text COLLATE utf8mb4_persian_ci DEFAULT NULL,
   `active_token` int(11) DEFAULT NULL,
   `is_active` tinyint(1) DEFAULT '0'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_persian_ci;

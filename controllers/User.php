@@ -36,9 +36,9 @@ class User
             }else{
                 return false;
             }
-        } catch (PDOException $pdo_exception) {
+        } catch (\PDOException $pdo_exception) {
             return 'PDO : ' . $pdo_exception->getMessage();
-        } catch (Exception $exception) {
+        } catch (\Exception $exception) {
             return 'Exception : ' . $exception->getMessage();
         }
     }
@@ -62,7 +62,7 @@ class User
             }else{
                 return false;
             }
-        } catch (PDOException $pdo_exception){
+        } catch (\PDOException $pdo_exception){
             return 'PDO Exception : ' . $pdo_exception->getMessage();
         }
     }
@@ -85,7 +85,7 @@ class User
                 return false;
             }
 
-        } catch (PDOException $pdo_exception){
+        } catch (\PDOException $pdo_exception){
             return 'PDO Exception : ' . $pdo_exception->getMessage();
         }
     }
@@ -108,7 +108,7 @@ class User
                 return false;
             }
 
-        } catch (PDOException $pdo_exception){
+        } catch (\PDOException $pdo_exception){
             return 'PDO Exception : ' . $pdo_exception->getMessage();
         }
     }
@@ -129,7 +129,7 @@ class User
                 return false;
             }
 
-        } catch (PDOException $pdo_exception){
+        } catch (\PDOException $pdo_exception){
             return 'PDO Exception : ' . $pdo_exception->getMessage();
         }
     }
@@ -152,7 +152,7 @@ class User
                 return false;
             }
 
-        } catch (PDOException $pdo_exception){
+        } catch (\PDOException $pdo_exception){
             return 'PDO Exception : ' . $pdo_exception->getMessage();
         }
     }
@@ -185,7 +185,7 @@ class User
                 if ($get_user_result != null)
                     return 'user_already_exist';
 
-                $active_token = GenerateActivateToken();
+                $active_token = generateActivateToken();
 
                 if(!empty($args['user_avatar']))
                     $user_avatar = $this->file_manager->UploadFile($user_avatar, AVATAR_UPLOAD_DIR, AVATAR_UPLOAD_URL);
@@ -216,9 +216,9 @@ class User
             }else{
                 return false;
             }
-        } catch (PDOException $pdo_exception) {
+        } catch (\PDOException $pdo_exception) {
             return 'PDO : ' . $pdo_exception->getMessage();
-        } catch (Exception $exception) {
+        } catch (\Exception $exception) {
             return 'Exception : ' . $exception->getMessage();
         }
     }
@@ -272,20 +272,20 @@ class User
             }else{
                 return  false;
             }
-        } catch (PDOException $pdo_exception) {
+        } catch (\PDOException $pdo_exception) {
             return 'PDO : ' . $pdo_exception->getMessage();
-        } catch (Exception $exception) {
+        } catch (\Exception $exception) {
             return 'Exception : ' . $exception->getMessage();
         }
     }
 
-    public function DeleteUser($auth, $userId, $deleteId){
+    public function DeleteUser($auth, $deleteId){
         try {
             if(empty($auth))
                 return 'token_not_valid';
 
-            if($this->jwt->Validate_Token($auth, $userId)){
-                $get_result = $this->GetUserById($userId);
+            if($this->jwt->Validate_Token($auth, $deleteId)){
+                $get_result = $this->GetUserById($deleteId);
 
                 if ($get_result != null && !empty($get_result)) {
 
@@ -308,9 +308,9 @@ class User
             }else{
                 return false;
             }
-        } catch (PDOException $pdo_exception) {
+        } catch (\PDOException $pdo_exception) {
             return 'PDO : ' . $pdo_exception->getMessage();
-        } catch (Exception $exception) {
+        } catch (\Exception $exception) {
             return 'Exception : ' . $exception->getMessage();
         }
     }
@@ -372,9 +372,9 @@ class User
             }else{
                 return false;
             }
-        } catch (PDOException $pdo_exception) {
+        } catch (\PDOException $pdo_exception) {
             return 'PDO : ' . $pdo_exception->getMessage();
-        } catch (Exception $exception) {
+        } catch (\Exception $exception) {
             return 'Exception : ' . $exception->getMessage();
         }
     }
@@ -398,40 +398,8 @@ class User
                 return false;
             }
 
-        } catch (PDOException $pdo_exception){
+        } catch (\PDOException $pdo_exception){
             return 'PDO Exception : ' . $pdo_exception->getMessage();
-        }
-    }
-
-    public function VerifyUserToken($userId, $token){
-        try {
-            $get_result = $this->GetUserById($userId);
-
-            if ($get_result != null && !empty($get_result) && !$get_result['is_active']) {
-                if($get_result['active_token'] == $token){
-
-                    $query = "UPDATE " . self::$table_name . " SET active_token=0, is_active=1 WHERE id=" . $userId;
-
-                    $stmt = $this->conn->prepare($query);
-
-                    if ($stmt->execute()) {
-                        if ($stmt->rowCount()) {
-                            return 'user_active_successful';
-                        } else {
-                            return 'failed_user_active';
-                        }
-                    }
-                    return false;
-                }else{
-                    return 'token_not_valid';
-                }
-            } else {
-                return 'user_not_found_or_active';
-            }
-        } catch (PDOException $pdo_exception) {
-            return 'PDO : ' . $pdo_exception->getMessage();
-        } catch (Exception $exception) {
-            return 'Exception : ' . $exception->getMessage();
         }
     }
 }

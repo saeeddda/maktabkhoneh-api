@@ -8,8 +8,8 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/utils/database.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/controllers/Story.php';
 
 if($_SERVER['REQUEST_METHOD'] === 'POST'){
-    $db = new Database();
-    $story = new Story($db->GetConnection());
+
+    $story = new Story(GetConnection());
 
     if(!isset($_FILES['story_file']) && !isset($_POST['user_id'])){
         echo json_encode([

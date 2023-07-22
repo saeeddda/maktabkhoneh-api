@@ -10,8 +10,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 
     $request = apache_request_headers();
 
-    $db = new Database();
-    $story = new Story($db->GetConnection());
+    $story = new Story(GetConnection());
 
     $fileId = $_POST['file_id'];
     $userId = $_POST['user_id'];

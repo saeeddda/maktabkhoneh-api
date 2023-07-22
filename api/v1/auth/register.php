@@ -1,4 +1,5 @@
 <?php
+
 header('Access-Control-Allow-Origin: *');
 header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Methods: POST");
@@ -8,8 +9,7 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/utils/sanitizer.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/controllers/Authentication.php';
 
 if($_SERVER['REQUEST_METHOD'] === 'POST'){
-    $db = new Database();
-    $authorize = new Authentication($db->GetConnection());
+    $authorize = new Authentication(GetConnection());
 
     $args =[
         'username' => isset($_POST['username']) && !empty($_POST['username']) ? strtolower(sanitize_strings($_POST['username'])) : '',
@@ -20,7 +20,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
         'user_avatar' => isset($_FILES['user_avatar']) && !empty($_FILES['user_avatar']) ? $_FILES['user_avatar'] : '',
     ];
 
-    $result = $authorize->Register($args);
+    $result = $authorize->register($args);
 
     if($result == 'user_already_exist'){
         http_response_code(201);
@@ -46,10 +46,10 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
             'success' => false,
         ]);
         return;
-    }else if($result == true){
+    }else if(!empty($result)){
         http_response_code(200);
         echo json_encode([
-            'data' => 'register_ok',
+            'data' => $result,
             'msg' => 'User register successful',
             'success' => true,
         ]);

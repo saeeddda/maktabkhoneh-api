@@ -4,20 +4,16 @@ header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Methods: POST");
 
 include_once $_SERVER['DOCUMENT_ROOT'] . '/utils/database.php';
-include_once $_SERVER['DOCUMENT_ROOT'] . '/controllers/User.php';
+include_once $_SERVER['DOCUMENT_ROOT'] . '/controllers/Authentication.php';
 
 if($_SERVER['REQUEST_METHOD'] == 'POST'){
-    $request = apache_request_headers();
-
-    $db = new Database();
-    $user = new User($db->GetConnection());
-
-    $auth = isset($request['Authorization']) && !empty($request['Authorization']) ? str_replace('Bearer ','', $request['Authorization']) : '';
+    $auth_controller = new Authentication(GetConnection());
 
     $userId = $_POST['user_id'];
-    $token = $_POST['token'];
+    $verify_token = $_POST['verify_token'];
+    $active_token = $_POST['active_token'];
 
-    $result = $user->VerifyUserToken($userId,$token);
+    $result = $auth_controller->verifyUserToken($userId, $verify_token, $active_token);
 
     if($result == 'user_active_successful'){
         http_response_code(200);

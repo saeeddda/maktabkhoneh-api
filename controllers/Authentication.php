@@ -24,7 +24,7 @@ class Authentication
         $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     }
 
-    public function Login($username, $email, $password)
+    public function login($username, $email, $password)
     {
         try {
 
@@ -42,7 +42,7 @@ class Authentication
             $stmt = $this->conn->prepare($query);
 
             if ($stmt->execute()) {
-                if ($stmt->rowCount()) {
+                if ($stmt->rowCount() > 0) {
 
                     $select_user = '';
                     if(!empty($email)){
@@ -51,11 +51,11 @@ class Authentication
                         $select_user = $this->user->GetUserByUsername($username)[0];
                     }
 
-                    if($select_user['is_active']) {
+                    if($this->checkUserActivate($select_user['id'])) {
                         $create_time = time();
-                        $expire_time = GetExpireTime($create_time);
+                        $expire_time = getExpireTime($create_time);
                         $payload = [
-                            'asn' => GetAppUrl(),
+                            'asn' => getAppUrl(),
                             'act' => $create_time,
                             'aet' => $expire_time,
                             'uid'=> $select_user['id']
@@ -71,12 +71,12 @@ class Authentication
                 return 'failed_to_login';
             }
 
-        } catch (PDOException $pdo_exception) {
+        } catch (\PDOException $pdo_exception) {
             return 'PDO Exception : ' . $pdo_exception->getMessage();
         }
     }
 
-    public function Register($args = array())
+    public function register($args = array())
     {
         try {
             $username = isset($args['username']) && !empty($args['username']) ? $args['username'] : '';
@@ -100,12 +100,14 @@ class Authentication
             if ($get_user_result != null)
                 return 'user_already_exist';
 
-            $active_token = GenerateActivateToken();
+            $active_token = generateActivateToken();
 
             if (!empty($args['user_avatar']))
                 $user_avatar = $this->file_manager->UploadFile($user_avatar, AVATAR_UPLOAD_DIR, AVATAR_UPLOAD_URL);
 
-            $query = sprintf("INSERT INTO %s (username,password,full_name,email,user_avatar,phone,active_token,is_active) VALUES (:username,:password,:full_name,:email,:user_avatar,:phone,:active_token,0)", self::$table_name);
+            $query = sprintf("INSERT INTO %s (username,password,full_name,email,user_avatar,phone,verify_token,active_token,is_active) VALUES (:username,:password,:full_name,:email,:user_avatar,:phone,:verify_token,:active_token,0)", self::$table_name);
+
+            $verify_token = generateRandomString();
 
             $stmt = $this->conn->prepare($query);
 
@@ -115,23 +117,72 @@ class Authentication
             $stmt->bindParam(':email', $email);
             $stmt->bindParam(':user_avatar', $user_avatar);
             $stmt->bindParam(':phone', $phone);
+            $stmt->bindParam(':verify_token', $verify_token);
             $stmt->bindParam(':active_token', $active_token);
 
             if ($stmt->execute()) {
                 if ($stmt->rowCount()) {
                     $user = $this->user->GetUserById($this->conn->lastInsertId());
                     send_mail($user['email'], 'فعالسازی حساب کاربری', 'حساب کاربری شما غیرفعال میباشد. برای فعالسازی لطفاً کد زیر را در اپلیکشین وارد کنید : ' . $user['active_token']);
-                    return true;
+
+                    return [
+                        'user_id' => $user['id'],
+                        'user_email' => $user['email'],
+                        'verify_token' => $verify_token,
+                    ];
                 } else {
                     return 'failed_user_add';
                 }
             } else {
                 return false;
             }
-        } catch (PDOException $pdo_exception) {
+        } catch (\PDOException $pdo_exception) {
             return 'PDO : ' . $pdo_exception->getMessage();
-        } catch (Exception $exception) {
+        } catch (\Exception $exception) {
             return 'Exception : ' . $exception->getMessage();
+        }
+    }
+
+    public function verifyUserToken($userId, $verify_token, $active_token){
+        try {
+            $get_result = $this->user->GetUserById($userId);
+
+            if (!empty($get_result) && !$get_result['is_active']) {
+                if($get_result['verify_token'] == $verify_token && $get_result['active_token'] == $active_token){
+
+                    $query = "UPDATE " . self::$table_name . " SET verify_token=null, active_token=null, is_active=1 WHERE id=" . $userId;
+
+                    $stmt = $this->conn->prepare($query);
+
+                    if ($stmt->execute()) {
+                        if ($stmt->rowCount() > 0) {
+                            return 'user_active_successful';
+                        } else {
+                            return 'failed_user_active';
+                        }
+                    }
+                    return false;
+                }else{
+                    return 'token_not_valid';
+                }
+            } else {
+                return 'user_not_found_or_active';
+            }
+        } catch (\PDOException $pdo_exception) {
+            return 'PDO : ' . $pdo_exception->getMessage();
+        } catch (\Exception $exception) {
+            return 'Exception : ' . $exception->getMessage();
+        }
+    }
+
+    public function checkUserActivate($userId): bool
+    {
+        $get_result = $this->user->GetUserById($userId);
+
+        if (!empty($get_result) && $get_result['is_active']) {
+            return true;
+        } else {
+            return false;
         }
     }
 }

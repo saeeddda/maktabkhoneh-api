@@ -1,6 +1,6 @@
 <?php
 
-function GetAppUrl(){
+function getAppUrl(){
     return sprintf(
         "%s://%s",
         isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off' ? 'https' : 'http',
@@ -8,7 +8,7 @@ function GetAppUrl(){
     );
 }
 
-function ConvertByteToSizeName($bytes)
+function convertByteToSizeName($bytes)
 {
     if ($bytes >= 1073741824)
     {
@@ -38,7 +38,7 @@ function ConvertByteToSizeName($bytes)
     return $bytes;
 }
 
-function ConvertSizeNameToByte(string $from) {
+function convertSizeNameToByte(string $from) {
     $units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
     $number = substr($from, 0, -2);
     $suffix = strtoupper(substr($from,-2));
@@ -56,7 +56,8 @@ function ConvertSizeNameToByte(string $from) {
     return $number * (1024 ** $exponent);
 }
 
-function GenerateActivateToken($digit = 6){
+function generateActivateToken($digit = 6): int
+{
     switch ( $digit ) {
         case 4:
             $code = rand( 1000, 9999 );
@@ -83,6 +84,18 @@ function GenerateActivateToken($digit = 6){
     return $code;
 }
 
-function GetExpireTime($create_time, $expire_day = 7){
+function getExpireTime($create_time, $expire_day = 7){
     return $create_time + (86400 * intval($expire_day));
+}
+
+function generateRandomString(int $length = 16):string {
+    $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    $randomString = '';
+
+    for ($i = 0; $i < $length; $i++) {
+        $index = rand(0, strlen($characters) - 1);
+        $randomString .= $characters[$index];
+    }
+
+    return $randomString;
 }

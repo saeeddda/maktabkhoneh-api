@@ -20,13 +20,13 @@ class JWT_Util{
     public function Validate_Token($auth_token, $userId){
         $payload = (array)$this->Decode_JWT($auth_token);
 
-        if ($payload['asn'] != GetAppUrl())
+        if ($payload['asn'] != getAppUrl())
             return 'token_not_valid';
 
         if($payload['act'] < time())
             return 'token_time_not_valid';
 
-        if($payload['aet'] > GetExpireTime($payload['act']))
+        if($payload['aet'] > getExpireTime($payload['act']))
             return 'token_time_not_valid';
 
         if ($payload['uid'] != $userId) {

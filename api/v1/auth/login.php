@@ -8,14 +8,13 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/utils/sanitizer.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/controllers/Authentication.php';
 
 if($_SERVER['REQUEST_METHOD'] === 'POST'){
-    $db = new Database();
-    $authorize = new Authentication($db->GetConnection());
+    $authorize = new Authentication(GetConnection());
 
     $username = isset($_POST['username']) && !empty($_POST['username']) ? strtolower(sanitize_strings($_POST['username'])) : '';
     $email = isset($_POST['email']) && !empty($_POST['email']) ? strtolower(sanitize_strings($_POST['email'])) : '';
     $password = $_POST['password'];
 
-    $result = $authorize->Login($username,$email, $password);
+    $result = $authorize->login($username,$email, $password);
 
     if($result == 'username_or_password_false'){
         http_response_code(400);

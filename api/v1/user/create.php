@@ -9,8 +9,7 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/utils/sanitizer.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/controllers/User.php';
 
 if($_SERVER['REQUEST_METHOD'] === 'POST'){
-    $db = new Database();
-    $user = new User($db->GetConnection());
+    $user = new User(GetConnection());
 
     $request = apache_request_headers();
 

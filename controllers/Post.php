@@ -57,9 +57,9 @@ class Post
             } else {
                 return 'token_not_valid';
             }
-        } catch (PDOException $pdo_exception) {
+        } catch (\PDOException $pdo_exception) {
             return 'PDO Exception : ' . $pdo_exception->getMessage();
-        } catch (Exception $exception) {
+        } catch (\Exception $exception) {
             return 'Exception : ' . $exception->getMessage();
         }
     }
@@ -95,9 +95,9 @@ class Post
             } else {
                 return 'token_not_valid';
             }
-        } catch (PDOException $pdo_exception) {
+        } catch (\PDOException $pdo_exception) {
             return 'PDO Exception : ' . $pdo_exception->getMessage();
-        } catch (Exception $exception) {
+        } catch (\Exception $exception) {
             return 'Exception : ' . $exception->getMessage();
         }
     }
@@ -133,9 +133,9 @@ class Post
             } else {
                 return 'token_not_valid';
             }
-        } catch (PDOException $pdo_exception) {
+        } catch (\PDOException $pdo_exception) {
             return 'PDO : ' . $pdo_exception->getMessage();
-        } catch (Exception $exception) {
+        } catch (\Exception $exception) {
             return 'Exception : ' . $exception->getMessage();
         }
     }
@@ -175,9 +175,9 @@ class Post
             } else {
                 return 'token_not_valid';
             }
-        } catch (PDOException $pdo_exception) {
+        } catch (\PDOException $pdo_exception) {
             return 'PDO : ' . $pdo_exception->getMessage();
-        } catch (Exception $exception) {
+        } catch (\Exception $exception) {
             return 'Exception : ' . $exception->getMessage();
         }
     }
@@ -210,9 +210,9 @@ class Post
             } else {
                 return 'token_not_valid';
             }
-        } catch (PDOException $pdo_exception) {
+        } catch (\PDOException $pdo_exception) {
             return 'PDO : ' . $pdo_exception->getMessage();
-        } catch (Exception $exception) {
+        } catch (\Exception $exception) {
             return 'Exception : ' . $exception->getMessage();
         }
     }
@@ -240,7 +240,7 @@ class Post
             } else {
                 return false;
             }
-        } catch (PDOException $pdo_exception) {
+        } catch (\PDOException $pdo_exception) {
             return 'PDO Exception : ' . $pdo_exception->getMessage();
         }
     }
@@ -263,7 +263,7 @@ class Post
             } else {
                 return false;
             }
-        } catch (PDOException $pdo_exception) {
+        } catch (\PDOException $pdo_exception) {
             return 'PDO Exception : ' . $pdo_exception->getMessage();
         }
     }
@@ -287,7 +287,7 @@ class Post
             } else {
                 return false;
             }
-        } catch (PDOException $pdo_exception) {
+        } catch (\PDOException $pdo_exception) {
             return 'PDO Exception : ' . $pdo_exception->getMessage();
         }
     }
@@ -356,9 +356,9 @@ class Post
             } else {
                 return 'token_not_valid';
             }
-        } catch (PDOException $pdo_exception) {
+        } catch (\PDOException $pdo_exception) {
             return 'PDO : ' . $pdo_exception->getMessage();
-        } catch (Exception $exception) {
+        } catch (\Exception $exception) {
             return 'Exception : ' . $exception->getMessage();
         }
     }
@@ -385,9 +385,9 @@ class Post
             } else {
                 return null;
             }
-        } catch (PDOException $pdo_exception) {
+        } catch (\PDOException $pdo_exception) {
             return 'PDO : ' . $pdo_exception->getMessage();
-        } catch (Exception $exception) {
+        } catch (\Exception $exception) {
             return 'Exception : ' . $exception->getMessage();
         }
     }
@@ -423,9 +423,9 @@ class Post
             } else {
                 return 'token_not_valid';
             }
-        } catch (PDOException $pdo_exception) {
+        } catch (\PDOException $pdo_exception) {
             return 'PDO Exception : ' . $pdo_exception->getMessage();
-        } catch (Exception $exception) {
+        } catch (\Exception $exception) {
             return 'Exception : ' . $exception->getMessage();
         }
     }
@@ -447,9 +447,9 @@ class Post
                 }
             }
             return false;
-        } catch (PDOException $pdo_exception) {
+        } catch (\PDOException $pdo_exception) {
             return 'PDO Exception : ' . $pdo_exception->getMessage();
-        } catch (Exception $exception) {
+        } catch (\Exception $exception) {
             return 'Exception : ' . $exception->getMessage();
         }
     }
@@ -484,9 +484,9 @@ class Post
             } else {
                 return 'token_not_valid';
             }
-        } catch (PDOException $pdo_exception) {
+        } catch (\PDOException $pdo_exception) {
             return 'PDO Exception : ' . $pdo_exception->getMessage();
-        } catch (Exception $exception) {
+        } catch (\Exception $exception) {
             return 'Exception : ' . $exception->getMessage();
         }
     }
@@ -505,9 +505,9 @@ class Post
                 return 'files_not_found';
             }
             return 'failed_files_get';
-        } catch (PDOException $pdo_exception) {
+        } catch (\PDOException $pdo_exception) {
             return 'PDO Exception : ' . $pdo_exception->getMessage();
-        } catch (Exception $exception) {
+        } catch (\Exception $exception) {
             return 'Exception : ' . $exception->getMessage();
         }
     }
@@ -524,9 +524,9 @@ class Post
                 }
             }
             return 'failed_files_get';
-        } catch (PDOException $pdo_exception) {
+        } catch (\PDOException $pdo_exception) {
             return 'PDO Exception : ' . $pdo_exception->getMessage();
-        } catch (Exception $exception) {
+        } catch (\Exception $exception) {
             return 'Exception : ' . $exception->getMessage();
         }
     }
@@ -548,7 +548,7 @@ class Post
             } else {
                 return false;
             }
-        } catch (PDOException $pdo_exception) {
+        } catch (\PDOException $pdo_exception) {
             return 'PDO Exception : ' . $pdo_exception->getMessage();
         }
     }
